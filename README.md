@@ -10,9 +10,9 @@
 For illustration, you can see three photos of the display. You may be surprised to see that some of the text lines are blurred. The explanation is simple. This is scrolling text, because otherwise it wouldn't fit on the display!\
 The first picture shows the radio playing, the second shows a file playing from an SD card, and the third shows the clock.
 <p float="left">
-  <img src="assets/Radio_player.png"  alt="Radio player" title="Radio player" width="30%"/>
-  <img src="assets/SD_player.png"  alt="SD player" title="SD player" width="30%"/> 
-  <img src="assets/CLock.png"  alt="Clock" title="Clock" width="30%"/>
+  <img src="assets/Radio_Player.png"  alt="Radio player" title="Radio player" width="30%"/>
+  <img src="assets/SD_Player.png"  alt="SD player" title="SD player" width="30%"/> 
+  <img src="assets/Clock.png"  alt="Clock" title="Clock" width="30%"/>
 </p>
 
 ## Development with VS Code and PlatformIO
