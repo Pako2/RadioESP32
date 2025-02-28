@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <link href="data:image/png;base64,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cy5hZG9iZS5jb20vdGlmZi8xLjAvIgogICAgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIgogICB4bXBNTTpEb2N1bWVudElEPSJnaW1wOmRvY2lkOmdpbXA6ZGJlMzUyN2UtZDI3ZC00MzNhLThiMGUtMzAzNWZjNzA0NjU3IgogICB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOjBjYjgzMGM0LTVhYTItNDg4ZC1iMDFmLWE1NTMzMzg4MWRhYSIKICAgeG1wTU06T3JpZ2luYWxEb2N1bWVudElEPSJ4bXAuZGlkOmZkMmQ0MjkwLTU4YzctNDU0Ny1iM2QzLTE0YTJjNThmNzA2NSIKICAgZGM6Rm9ybWF0PSJpbWFnZS9wbmciCiAgIEdJTVA6QVBJPSIyLjAiCiAgIEdJTVA6UGxhdGZvcm09IldpbmRvd3MiCiAgIEdJTVA6VGltZVN0YW1wPSIxNzAyODE3MTMzNDQzNjcyIgogICBHSU1QOlZlcnNpb249IjIuMTAuMjgiCiAgIHRpZmY6T3JpZW50YXRpb249IjEiCiAgIHhtcDpDcmVhdG9yVG9vbD0iR0lNUCAyLjEwIj4KICAgPHhtcE1NOkhpc3Rvcnk+CiAgICA8cmRmOlNlcT4KICAgICA8cmRmOmxpCiAgICAgIHN0RXZ0OmFjdGlvbj0ic2F2ZWQiCiAgICAgIHN0RXZ0OmNoYW5nZWQ9Ii8iCiAgICAgIHN0RXZ0Omluc3RhbmNlSUQ9InhtcC5paWQ6M2JjNWUzM2MtODBjNi00NzY1LWExNjEtMWRhNGVjMzBkNjVlIgogICAgICBzdEV2dDpzb2Z0d2FyZUFnZW50PSJHaW1wIDIuMTAgKFdpbmRvd3MpIgogICAgICBzdEV2dDp3aGVuPSIyMDIzLTEyLTE3VDEzOjQ1OjMzIi8+CiAgICA8L3JkZjpTZXE+CiAgIDwveG1wTU06SGlzdG9yeT4KICA8L3JkZjpEZXNjcmlwdGlvbj4KIDwvcmRmOlJERj4KPC94OnhtcG1ldGE+CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAogICAgICAgICAgICAgICAgICAgICAgICAgICAKPD94cGFja2V0IGVuZD0idyI/PrZBmJcAAAMAUExURQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMwAAZgAAmQAAzAAA/wAzAAAzMwAzZgAzmQAzzAAz/wBmAABmMwBmZgBmmQBmzABm/wCZAACZMwCZZgCZmQCZzACZ/wDMAADMMwDMZgDMmQDMzADM/wD/AAD/MwD/ZgD/mQD/zAD//zMAADMAMzMAZjMAmTMAzDMA/zMzADMzMzMzZjMzmTMzzDMz/zNmADNmMzNmZjNmmTNmzDNm/zOZADOZMzOZZjOZmTOZzDOZ/zPMADPMMzPMZjPMmTPMzDPM/zP/ADP/MzP/ZjP/mTP/zDP//2YAAGYAM2YAZmYAmWYAzGYA/2YzAGYzM2YzZmYzmWYzzGYz/2ZmAGZmM2ZmZmZmmWZmzGZm/2aZAGaZM2aZZmaZmWaZzGaZ/2bMAGbMM2bMZmbMmWbMzGbM/2b/AGb/M2b/Zmb/mWb/zGb//5kAAJkAM5kAZpkAmZkAzJkA/5kzAJkzM5kzZpkzmZkzzJkz/5lmAJlmM5lmZplmmZlmzJlm/5mZAJmZM5mZZpmZmZmZzJmZ/5nMAJnMM5nMZpnMmZnMzJnM/5n/AJn/M5n/Zpn/mZn/zJn//8wAAMwAM8wAZswAmcwAzMwA/8wzAMwzM8wzZswzmcwzzMwz/8xmAMxmM8xmZsxmmcxmzMxm/8yZAMyZM8yZZsyZmcyZzMyZ/8zMAMzMM8zMZszMmczMzMzM/8z/AMz/M8z/Zsz/mcz/zMz///8AAP8AM/8AZv8Amf8AzP8A//8zAP8zM/8zZv8zmf8zzP8z//9mAP9mM/9mZv9mmf9mzP9m//+ZAP+ZM/+ZZv+Zmf+ZzP+Z///MAP/MM//MZv/Mmf/MzP/M////AP//M///Zv//mf//zP///69WTRwAAAABdFJOUwBA5thmAAAAAWJLR0QAiAUdSAAAAAlwSFlzAAAOwwAADsMBx2+oZAAAAAd0SU1FB+cMEQwtIY+Z77QAAABsSURBVCjPpVJbDoAwDIL7X9qYTF0fA5392A+EUQoghgQ0LhlU+MC4ISxR7qM0++ANvhqHnwyawfTOwpEQP4rWKuFZuyeUfNauR0DfCTni5AFZrRCsQu8BXYi9SZvDpXEroe9AuoU/94/G+E4ebUUCTNF1ZcYAAAAASUVORK5CYII=" rel="icon" type="image/x-icon" />
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <title>RadioESP32</title>
+  <!-- Bootstrap core CSS -->
+  <link href="required.css" rel="stylesheet">
+  <style>
+    input[readonly].roclass {
+    background-color: #fff;
+    }
+    .custombtn {
+    width: 130px !important;
+    margin-left: 15px !important;
+    }
+  </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <!-- Sidebar Holder -->
+        <nav id="sidebar">
+            <div id="dismiss">
+                <i class="glyphicon glyphicon-arrow-left"></i>
+            </div>
+            <div class="sidebar-header">
+                <span>
+<img style='display:block; width:256px;height:156px;' src='data:image/png;base64,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' alt="RadioESP32"/>
+                </span>
+                <h1>RadioESP32</h1>
+            </div>
+            <ul class="list-unstyled components">
+                <li class="active">
+                    <a href="#" id="control"><i class="glyphicon glyphicon-music"></i>Radio Player</a>
+                </li>
+                <li style="display:none;" id="sdctrl">
+                    <a href="#" id="sdcontrol"><i class="glyphicon glyphicon-sd-video"></i>SD Card Player</a>
+                </li>
+                <li>
+                    <a href="#" id="status"><i class="glyphicon glyphicon-info-sign"></i>Status</a>
+                </li>
+                <li>
+                    <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false"><i  class="glyphicon glyphicon-cog"></i>Settings</a>
+                    <ul class="collapse list-unstyled" id="homeSubmenu">
+                        <li>
+                            <a href="#" id="radio"><i class="glyphicon glyphicon-globe"></i>Radio Settings</a>
+                        </li>
+                        <li style="display:none;" id="sdcfg">
+                            <a href="#" id="sd"><i class="glyphicon glyphicon-transfer"></i>SD Player Settings</a>
+                        </li>
+                        <li>
+                            <a href="#" id="network"><i class="glyphicon glyphicon-signal"></i>Network Settings</a>
+                        </li>
+                        <li>
+                            <a href="#" id="hardware"><i class="glyphicon glyphicon-wrench"></i>Hardware Settings</a>
+                        </li>
+                        <li>
+                            <a href="#" id="irremote"><i class="glyphicon glyphicon-flash"></i>IR Remote Settings</a>
+                        </li>
+                        <li style="display:none;" id="disp">
+                            <a href="#" id="display"><i class="glyphicon glyphicon-tasks"></i>Display Settings</a>
+                        </li>
+                        <li>
+                            <a href="#" id="general"><i class="glyphicon glyphicon-list-alt"></i>General Settings</a>
+                        </li>
+                        <li>
+                            <a href="#" id="ntp"><i class="glyphicon glyphicon-hourglass"></i>NTP (Time) Settings</a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <li>
+                        <a href="#" id="backup"><i class="glyphicon glyphicon-floppy-disk"></i>Backup & Restore</a>
+                    </li>
+                    <li>
+                        <a href="#" id="reset"><i class="glyphicon glyphicon-repeat"></i>Factory Reset</a>
+                    </li>
+                    <li style="display:none;" id="update_">
+                        <a data-toggle="modal" href="#update"><i class="glyphicon glyphicon-open"></i>Update</a>
+                    </li>
+            </ul>
+            <ul class="list-unstyled CTAs">
+                <li>
+                    <a href="https://github.com/Pako2/radioesp32" class="download">Project's GitHub Page</a>
+                </li>
+                <li>
+                    <a href="https://www.paypal.com/donate/?business=RRNJUGC6BNPGC&no_recurring=1&currency_code=EUR" class="download" aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="Nothing says better thank you than a donation."><i class="glyphicon glyphicon-euro"></i>Donate</a>
+                </li>
+<!--                <li>
+                    <a href="#" class="article" onclick="logout();">Logout</a>
+                </li>
+-->
+                <li>
+                    <h6 id="mainver" class="text-center"></h6>
+                </li>
+            </ul>
+        </nav>
+        <!-- Page Content Holder -->
+        <div id="content">
+            <button type="button" id="sidebarCollapse" class="btn btn-info navbar-btn">
+                <i class="glyphicon glyphicon-menu-hamburger"></i>
+                <span>Menu</span>
+            </button>
+            <div class="pull-right" id="ws-connection-status">
+                <div class="alert alert-warning" role="alert">
+                    <i class="glyphicon glyphicon-warning-sign"></i>
+                    <span>Connection with RadioESP32 absent. Reconnecting...</span>
+                </div>
+            </div>
+            <div id="ajaxcontent">
+            </div>
+            <div id="revcommit" class="modal fade" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Please review changes</h4>
+                        </div>
+                        <div class="modal-body">
+                            <pre id="jsonholder"></pre>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                            <button type="button" onclick="commit();" class="btn btn-success" data-dismiss="modal">Save & Reboot</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="destroy" class="modal fade" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Are you absolutely sure?</h4>
+                        </div>
+                        <div class="alert alert-warning">
+                            <h5><strong>Warning!</strong> Unexpected bad things will happen if you don’t read this!</h5>
+                        </div>
+                        <div class="modal-body">
+                            <h5>
+                                This action <strong>cannot</strong> be undone. This will permanently delete <strong>all settings.</strong> Please make sure you made a backup first.
+                            </h5>
+                            <div style="clear:both;">
+                                <br>
+                            </div>
+                            <h5>Please type in the hostname of the device to confirm.</h5>
+                            <div style="clear:both;">
+                                <br>
+                            </div>
+                            <p>
+                                <input type="text" class="form-control input-block" id="compare" oninput="compareDestroy()">
+                            </p>
+                        </div>
+                        <div class="modal-footer">
+                            <button id="destroybtn" type="button" disabled="" onclick="destroy();" class="btn btn-block btn-danger">I understand the consequences.</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+<!-- 
+            <div id="signin" class="modal fade" role="dialog">
+                <div class="modal-dialog">
+                    
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Please Sign In</h4>
+                        </div>
+                        <div class="row">
+                            <br>
+                            <div class="col-md-8 col-md-offset-2">
+                                <div class="login-panel panel panel-default">
+                                    <div class="panel-body">
+                                        <form role="form" onsubmit="login(); return false">
+                                            <fieldset>
+                                                <div class="form-group">
+                                                    <input id="password" class="form-control" placeholder="Password" name="password" type="password" value="" required="" title="Please enter your password">
+                                                </div>
+                                                <button type="submit" class="btn btn-success btn-md pull-right">Login</button>
+                                            </fieldset>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+ -->
+            <div id="update" class="modal fade" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Update Firmware</h4>
+                        </div>
+                        <div class="alert alert-warning">
+                            <strong>Warning!</strong> Please make sure you made a backup first
+                        </div>
+                        <div class="modal-body">
+                            <div style="margin-top:-30px;">
+                                <h4>Latest Version Online</h4>
+                                <div id="onlineupdate">
+                                    <h5 id=releasehead></h5>
+                                    <div style="clear:both;">
+                                        <br>
+                                    </div>
+                                    <!-- <pre id="releasebody">Getting update information from GitHub...</pre> -->
+                                    <div class="pull-right" style="margin-top:-20px;">
+                                        <a class="pull-right">
+                                            <button type="button" class="btn btn-primary" onclick="downloadupdate();" id="downloadupdate">Download</button>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="clear:both;">
+                            </div>
+                            <br>
+                            <div>
+                                <div class="row form-group">
+                                    <label for="name" class="col-sm-3 control-label">Current Version:</label>
+                                    <div class="col-sm-9">
+                                    <input class="form-control input-sm" id="versionhead" type="text" readonly="readonly" style="color:red;">
+                                    </div>
+                                </div>
+                                <div class="row form-group">
+                                  <label class="col-sm-3 control-label">File:</label>
+                                  <div class="col-sm-9">
+                                      <input id="binform" onchange="allowUpload();" type="file" name="update" accept=".bin">
+                                  </div>
+                                </div>
+                                <div class="row form-group">
+                                  <label class="col-sm-3 control-label">Username:</label>
+                                  <div class="col-sm-9">
+                                    <input type="text" class="form-control" id="updlogin" name="updlogin" placeholder="Login" onchange="allowUpload();" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" required>
+                                  </div>
+                                </div>
+                                <div class="row form-group">
+                                  <label class="col-sm-3 control-label">Password:</label>
+                                  <div class="col-sm-9">
+                                    <input type="password" class="form-control" id="updpassw" name="updpassw" placeholder="Password" onchange="allowUpload();" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" required>
+                                  </div>
+                                </div>                                
+                                <div class="pull-right">
+                                    <button onclick="upload();" class="btn btn-primary" id="upbtn" disabled="">Update</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="clear:both;">
+                            <br>
+                        </div>
+                        <div class="modal-footer">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer class="footer">
+            <div id="commit" class="container">
+                <h6 class="text-muted">RadioESP32 - This is a <a href="https://github.com/Pako2/radioesp32/blob/stable/LICENSE">free</a> software.</h6>
+            </div>
+        </footer>
+        <div class="overlay"></div>
+        <script src="required.js"></script>
+        <script src="radioesp32.js"></script>
+        <script>start();</script>
+  </div>
+</body>
+</html>

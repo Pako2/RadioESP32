@@ -1,0 +1,22 @@
+{
+  "name": "FS_editor",
+  "version": "1.2.3",
+  "keywords": "",
+  "description": "",
+  "repository":
+  {
+    "type": "git",
+    "url": ""
+  },
+  "authors":
+  [
+    {
+        "name": "Me-No-Dev",
+        "email": "",
+        "maintainer": false
+    }
+  ],
+  "frameworks": "arduino",
+  "platforms": "raspberrypi, espressif8266, espressif32, ststm32",
+  "headers": "FS_editor.h"
+}

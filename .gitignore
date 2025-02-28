@@ -1,0 +1,14 @@
+.pio
+.vscode
+bin/noota4mb/*
+bin/wota8mb/*
+bin/noota4mbnod/*
+bin/wota8mbnod/*
+data/config.json
+include/webh/*
+scripts/__pycache__/*
+scripts/htmlmin/__pycache__/*
+scripts/htmlmin/python3html/__pycache__/*
+unpacked_fs/*
+partition_table_from_flash.bin
+RadioESP32.code-workspace
