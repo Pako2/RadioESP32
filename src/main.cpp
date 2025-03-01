@@ -18,7 +18,7 @@
 #include <ESPmDNS.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <freertos/task.h>          // FreeRtos task handling
+#include <freertos/task.h> // FreeRtos task handling
 #include <esp_task_wdt.h>
 #include <LittleFS.h>
 #if defined(DATAWEB)
@@ -109,8 +109,8 @@ enum IRcmd
   IR_FORW,  // next
   IR_BACKW, // previous
 #if defined(AUTOSHUTDOWN)
-  IR_ISD,   // immediate shutdown
-  IR_SSD    // scheduled shutdown
+  IR_ISD, // immediate shutdown
+  IR_SSD  // scheduled shutdown
 #endif
 };
 
@@ -235,7 +235,7 @@ int adcvalraw = 0;
 uint16_t adcval = 0;
 bool batbarflag = false;
 #define LOG_2(n) ((n == 8) ? 3 : ((n == 16) ? 4 : ((n == 32) ? 5 : 6)))
-#define FILTER_LEN 32  // allowed values: 8, 16, 32, 64
+#define FILTER_LEN 32 // allowed values: 8, 16, 32, 64
 const uint8_t FILTER_SHIFT = LOG_2(FILTER_LEN);
 const uint8_t FILTER_MASK = FILTER_LEN - 1;
 uint16_t *Adc1_Buffer; // PSRAM !
@@ -371,7 +371,7 @@ const uint8_t cmd_table_len = 28;
 #else
 const uint8_t cmd_table_len = 26;
 #endif
-uint8_t RESERVEDGPIOS[16];
+uint8_t *RESERVEDGPIOS;
 struct IR_CMD *ir_cmds;
 char *testurl;
 int Weekday;
@@ -928,11 +928,11 @@ void audio_showstreamtitle(const char *info)
     uint8_t len;
     const char *p = info;
     uint16_t limit = BUFFLEN - 6;
-    title[0] = '\0'; // preventive cleaning - otherwise if the separator is missing, 
+    title[0] = '\0'; // preventive cleaning - otherwise if the separator is missing,
                      // the original content remains there
     char *_title = artist;
-    inx = strstr(info, " - ");    // Find separator between artist and title
-    if (inx)                      // Separator found?
+    inx = strstr(info, " - "); // Find separator between artist and title
+    if (inx)                   // Separator found?
     {
       _title = title;
       len = (uint8_t)(inx - info);
@@ -1020,32 +1020,35 @@ void testUrl(const char *url)
 #if defined(BATTERY)
 void batbar()
 {
-  uint16_t val = adcval;
-  val = (val > config->bat0) ? val - config->bat0 : 0;
-  val = (val < config->batw) ? val : config->batw;
-  uint8_t perc = 100 * (val / (float)config->batw);
-  if (config->lowbatt)
+  if (config->batenabled)
   {
-    if (perc <= config->critbatt)
+    uint16_t val = adcval;
+    val = (val > config->bat0) ? val - config->bat0 : 0;
+    val = (val < config->batw) ? val : config->batw;
+    uint8_t perc = 100 * (val / (float)config->batw);
+    if (config->lowbatt)
     {
-      changeDispMode(DSP_LOWBATT);
-      return;
+      if (perc <= config->critbatt)
+      {
+        changeDispMode(DSP_LOWBATT);
+        return;
+      }
+      else if (dispmode == DSP_LOWBATT)
+      {
+        changeDispMode(DSP_RADIO);
+      }
     }
-    else if (dispmode == DSP_LOWBATT)
-    {
-      changeDispMode(DSP_RADIO);
-    }
-  }
 
-  if ((dispmode == DSP_RADIO) || (dispmode == DSP_DIMMED))
-  {
-    uint8_t w1 = uint8_t((val / (float)config->batw) * (WID - 2)); // uint16_t ?
-    batsprite.fillSprite(TFT_RED);
-    batsprite.fillRect(0, 0, w1, 6 - 2, TFT_GREEN);
-    batbarflag = true; // flag for display loop
+    if ((dispmode == DSP_RADIO) || (dispmode == DSP_DIMMED))
+    {
+      uint8_t w1 = uint8_t((val / (float)config->batw) * (WID - 2)); // uint16_t ?
+      batsprite.fillSprite(TFT_RED);
+      batsprite.fillRect(0, 0, w1, 6 - 2, TFT_GREEN);
+      batbarflag = true; // flag for display loop
+    }
   }
 }
-#endif //BATTERY
+#endif // BATTERY
 
 void volumebar(uint8_t val)
 {
@@ -1147,7 +1150,7 @@ void restoreIcons()
   sdp_icons();
 }
 
-#endif //DISP
+#endif // DISP
 
 void setMutepin(uint8_t mute_, bool test)
 {
@@ -1512,13 +1515,16 @@ void changeDispMode(disp_mode_t mode)
   }
   if (mode != DSP_LOWBATT)
   {
-    uint16_t val = adcval;
-    val = (val > config->bat0) ? val - config->bat0 : 0;
-    val = (val < config->batw) ? val : config->batw;
-    uint8_t perc = 100 * (val / (float)config->batw);
-    if (perc <= config->critbatt)
+    if (config->batenabled)
     {
-      return;
+      uint16_t val = adcval;
+      val = (val > config->bat0) ? val - config->bat0 : 0;
+      val = (val < config->batw) ? val : config->batw;
+      uint8_t perc = 100 * (val / (float)config->batw);
+      if (perc <= config->critbatt)
+      {
+        return;
+      }
     }
     dispmode = mode;
     asdmode = false;
@@ -1564,7 +1570,7 @@ void changeDispMode(disp_mode_t mode)
           sprite[row].pushSprite(0, rows[row].ypos);
         }
       }
-      enc_inactivity = 0; 
+      enc_inactivity = 0;
       break;
 
     case DSP_CLOCK:
@@ -1628,7 +1634,7 @@ void setTrack(int16_t trck)
   updateartist = true;
   sendSDtrack(SD_curindex, shortname);
 }
-//#endif
+// #endif
 
 void countTrack(int8_t step)
 {
@@ -1727,7 +1733,6 @@ void setPreset(uint8_t prst)
 #endif
   ESP_LOGW(TAG, "Preset is [%d] : %s", prst, presets[prst].url);
 }
-
 
 void updatePreset(int8_t prsstep, bool play)
 {
@@ -1876,9 +1881,9 @@ void chk_enc()
       tripleclick || longclick || pwoffclick ||
       (rotationcount != 0))
 #else
-    if (singleclick || doubleclick || // Any activity?
-        tripleclick || longclick ||
-        (rotationcount != 0))
+  if (singleclick || doubleclick || // Any activity?
+      tripleclick || longclick ||
+      (rotationcount != 0))
 #endif
 
   {
@@ -1993,7 +1998,7 @@ void chk_enc()
       break;
 
 #if defined(SDCARD)
-      case TRACKS:
+    case TRACKS:
       pmode = PM_SDCARD;
 #if defined(DISP)
       drawIcon(PI_SDCARD);
@@ -2011,7 +2016,7 @@ void chk_enc()
 #endif
       break;
 #endif
-      case MODECHANGE:
+    case MODECHANGE:
       shouldReboot = true;
       break;
 #if defined(AUTOSHUTDOWN)
@@ -2083,7 +2088,7 @@ void chk_enc()
     updatePreset(rotationcount, false);
     break;
 #if defined(SDCARD)
-    case TRACKS:
+  case TRACKS:
     getAdjacentTrack(rotationcount);
     break;
 #endif
@@ -2158,7 +2163,6 @@ void displayloop(void)
     {
       u8h2[row].drawUTF8(0, offset, rows[row].input);
       sprite[row].pushSprite(0, rows[row].ypos);
-      //displayflag = true;
       rows[row].updated = false;
     }
   }
@@ -2420,18 +2424,17 @@ bool wifiFound()
   WiFi.scanDelete();
 }
 
-void note(struct timeval* tv)
+void note(struct timeval *tv)
 {
   struct tm ti;
   getLocalTime(&ti);
   ESP_LOGW(TAG, "TOD synced: %04d-%02d-%02d %02d:%02d:%02d",
-    ti.tm_year + 1900,
-    ti.tm_mon + 1,
-    ti.tm_mday,
-    ti.tm_hour,
-    ti.tm_min,
-    ti.tm_sec
-  );
+           ti.tm_year + 1900,
+           ti.tm_mon + 1,
+           ti.tm_mday,
+           ti.tm_hour,
+           ti.tm_min,
+           ti.tm_sec);
 }
 
 void setup()
@@ -2474,10 +2477,10 @@ void setup()
 #if defined(AUTOSHUTDOWN)
       "\"dasd\":20,"
 #endif
-      "\"bat0\":3095,"
+      "\"bat0\":4094,"
       "\"bat100\":4095,"
       "\"hostnm\":\"RadioESP32\","
-      "\"lowbatt\":1,"
+      "\"lowbatt\":0,"
       "\"critbatt\":10"
       "},"
       "\"ntp\":{"
@@ -2531,6 +2534,11 @@ void setup()
   artist = (char *)ps_malloc(BUFFLEN * sizeof(char));
   title = (char *)ps_malloc(BUFFLEN * sizeof(char));
   testurl = (char *)ps_malloc(BUFFLEN * sizeof(char));
+  RESERVEDGPIOS = (uint8_t *)ps_malloc(16 * sizeof(uint8_t));
+  for (uint8_t i = 0; i < 16; i++)
+  {
+    RESERVEDGPIOS[i] = 0;
+  }
 
 #if defined(BATTERY)
   adc_Init();
@@ -2714,7 +2722,7 @@ void setup()
     if (config->onoffipin != 255 && config->onoffopin != 255)
     {
       pinMode(config->onoffipin, INPUT);
-      attachInterrupt(config->onoffipin, pw_OFF, CHANGE); // Interrupts will be handle by ON/OFF button                
+      attachInterrupt(config->onoffipin, pw_OFF, CHANGE); // Interrupts will be handle by ON/OFF button
     }
 #endif
     audio.setVolumeSteps(100);
@@ -2875,203 +2883,192 @@ void irloop()
       }
 // #endif
 #else // AUTOSHUTDOWN defined
-        if (!asdmode)
+      if (!asdmode)
+      {
+        if (ircmd > 9)
         {
-          if (ircmd > 9)
+#if defined(DISP)
+          changeDispMode(DSP_RADIO);
+#endif
+          switch (ircmd)
           {
-#if defined(DISP)
-            changeDispMode(DSP_RADIO);
-#endif
-            switch (ircmd)
+          case IR_MUTE:
+            muteflag = !muteflag;
+            mute(1);
+            break;
+          case IR_VOLP:
+            updateVolume(1);
+            break;
+          case IR_VOLM:
+            updateVolume(-1);
+            break;
+          case IR_CHP:
+            if (pmode == PM_RADIO)
             {
-            case IR_MUTE:
-              muteflag = !muteflag;
-              mute(1);
-              break;
-            case IR_VOLP:
-              updateVolume(1);
-              break;
-            case IR_VOLM:
-              updateVolume(-1);
-              break;
-            case IR_CHP:
-              if (pmode == PM_RADIO)
-              {
-                updatePreset(1, true);
-              }
+              updatePreset(1, true);
+            }
 #if defined(SDCARD)
-              else
-              {
-                updateTrack(1);
-              }
+            else
+            {
+              updateTrack(1);
+            }
 #endif
-              break;
-            case IR_CHM:
-              if (pmode == PM_RADIO)
-              {
-                updatePreset(-1, true);
-              }
+            break;
+          case IR_CHM:
+            if (pmode == PM_RADIO)
+            {
+              updatePreset(-1, true);
+            }
 #if defined(SDCARD)
-              else
-              {
-                updateTrack(-1);
-              }
+            else
+            {
+              updateTrack(-1);
+            }
 #endif
-              break;
-            case IR_ISD:
-              pwoff_req = true;
-              break;
-            case IR_SSD:
+            break;
+          case IR_ISD:
+            pwoff_req = true;
+            break;
+          case IR_SSD:
 #if defined(DISP)
-              changeDispMode(DSP_ASD);
-              asdmode = true;
-              dgt_count_asd = 0;
-              dgt_asd = 0;
+            changeDispMode(DSP_ASD);
+            asdmode = true;
+            dgt_count_asd = 0;
+            dgt_asd = 0;
 #endif
-              break;
-            case IR_OK:
-              break;
-            case IR_EX:
-              break;
-            case IR_BS:
-              break;
-            case IR_PP:
+            break;
+          case IR_OK:
+            break;
+          case IR_EX:
+            break;
+          case IR_BS:
+            break;
+          case IR_PP:
 #if defined(SDCARD)
-              pausePlay();
+            pausePlay();
 #endif
-              break;
+            break;
 #if defined(SDCARD)
-              case IR_STOP:
-              if (pmode == PM_SDCARD)
-              {
-                audio.stopSong();
+          case IR_STOP:
+            if (pmode == PM_SDCARD)
+            {
+              audio.stopSong();
 #if defined(DISP)
-                drawIcon(PI_STOP);
+              drawIcon(PI_STOP);
 #endif
-                setMutepin(1, true);
-                sendSDstat(0);
+              setMutepin(1, true);
+              sendSDstat(0);
 #if defined(DISP)
-                prgrssbar(0, false);
+              prgrssbar(0, false);
 #endif
-              }
-              break;
-              case IR_FORW:
-              audio.setTimeOffset(config->seekstep * 1);
-              break;
-            case IR_BACKW:
-              audio.setTimeOffset(config->seekstep * -1);
-              break;
-              case IR_RNDM:
-              Random();
-              break;
-            case IR_RPT:
-              if (pmode == PM_SDCARD)
-              {
-                Repeat();
-              }
-              break;
+            }
+            break;
+          case IR_FORW:
+            audio.setTimeOffset(config->seekstep * 1);
+            break;
+          case IR_BACKW:
+            audio.setTimeOffset(config->seekstep * -1);
+            break;
+          case IR_RNDM:
+            Random();
+            break;
+          case IR_RPT:
+            if (pmode == PM_SDCARD)
+            {
+              Repeat();
+            }
+            break;
 #endif
-            case IR_RADIO:
-              if (pmode != PM_RADIO)
-              {
-                audio.stopSong();
-                pmode = PM_RADIO;
-                setMutepin(0, true);
+          case IR_RADIO:
+            if (pmode != PM_RADIO)
+            {
+              audio.stopSong();
+              pmode = PM_RADIO;
+              setMutepin(0, true);
 #if defined(DISP)
-                drawIcon(PI_RADIO);
-                prgrssbar(0, true);
-                clearLines();
+              drawIcon(PI_RADIO);
+              prgrssbar(0, true);
+              clearLines();
 #endif
-                audpreset = 254;
-                setPreset(reqpreset);
-              }
-              sendRadio(NULL);
-              break;
-            case IR_SD:
+              audpreset = 254;
+              setPreset(reqpreset);
+            }
+            sendRadio(NULL);
+            break;
+          case IR_SD:
 #if defined(SDCARD)
             if (SD_okay)
-              {
-                if (pmode != PM_SDCARD)
-                {
-                  oldsdix_req = true;
-                }
-                else
-                {
-                  updateTrack(0);
-                }
-              }
-#endif
-              break;
-            default:
-              ESP_LOGW(TAG, "Unknown IR command %08X", rawdata);
-              sendIRcode(rawdata);
-              break;
-            }
-          }
-          else
-          {
-#if defined(DISP)
-            changeDispMode(DSP_PRESETNR);
-#endif
-            proc_digit(ircmd);
-          }
-        }    // !asdmode
-        else // asdmode
-        {
-          if (ircmd <= 9)
-          {
-            if (dgt_count_asd < 3)
             {
-              dgt_count_asd += 1;
-              dgt_asd = 10 * dgt_asd + ircmd;
-              proc_asd();
-            }
-          }
-          else
-          {
-            switch (ircmd)
-            {
-            case IR_OK:
-              if (dgt_asd > 0)
+              if (pmode != PM_SDCARD)
               {
-                if (dgt_asd > MAXPWOFF)
-                {
-                  dgt_asd = MAXPWOFF;
-                }
-                else if (dgt_asd < MINPWOFF)
-                {
-                  dgt_asd = MINPWOFF;
-                }
-                pwoffminutes = dgt_asd;
-                time(&now);
-                pwofftime = now + 60 * pwoffminutes;
-                asdmode = false;
-                sendAsd(NULL);
-#if defined(DISP)
-                if (dispmode != DSP_LOWBATT)
-                {
-                  dispmode = DSP_OTHER;
-                  changeDispMode(DSP_RADIO); // Restore screen
-                }
-#endif
+                oldsdix_req = true;
               }
               else
               {
-                pwofftime = 0;
-                pwoffminutes = config->dasd;
-                asdmode = false;
-                sendAsd(NULL);
-                enc_menu_mode = VOLUME; // Back to default mode
-#if defined(DISP)
-                if (dispmode != DSP_LOWBATT)
-                {
-                  dispmode = DSP_OTHER;
-                  changeDispMode(DSP_RADIO); // Restore screen
-                }
-#endif
+                updateTrack(0);
               }
-              break;
-            case IR_EX:
+            }
+#endif
+            break;
+          default:
+            ESP_LOGW(TAG, "Unknown IR command %08X", rawdata);
+            sendIRcode(rawdata);
+            break;
+          }
+        }
+        else
+        {
+#if defined(DISP)
+          changeDispMode(DSP_PRESETNR);
+#endif
+          proc_digit(ircmd);
+        }
+      } // !asdmode
+      else // asdmode
+      {
+        if (ircmd <= 9)
+        {
+          if (dgt_count_asd < 3)
+          {
+            dgt_count_asd += 1;
+            dgt_asd = 10 * dgt_asd + ircmd;
+            proc_asd();
+          }
+        }
+        else
+        {
+          switch (ircmd)
+          {
+          case IR_OK:
+            if (dgt_asd > 0)
+            {
+              if (dgt_asd > MAXPWOFF)
+              {
+                dgt_asd = MAXPWOFF;
+              }
+              else if (dgt_asd < MINPWOFF)
+              {
+                dgt_asd = MINPWOFF;
+              }
+              pwoffminutes = dgt_asd;
+              time(&now);
+              pwofftime = now + 60 * pwoffminutes;
+              asdmode = false;
+              sendAsd(NULL);
+#if defined(DISP)
+              if (dispmode != DSP_LOWBATT)
+              {
+                dispmode = DSP_OTHER;
+                changeDispMode(DSP_RADIO); // Restore screen
+              }
+#endif
+            }
+            else
+            {
+              pwofftime = 0;
+              pwoffminutes = config->dasd;
+              asdmode = false;
+              sendAsd(NULL);
               enc_menu_mode = VOLUME; // Back to default mode
 #if defined(DISP)
               if (dispmode != DSP_LOWBATT)
@@ -3080,20 +3077,31 @@ void irloop()
                 changeDispMode(DSP_RADIO); // Restore screen
               }
 #endif
-              break;
-            case IR_BS:
-              if (dgt_count_asd < 4 && dgt_count_asd > 0)
-              {
-                dgt_asd = dgt_asd / 10;
-                proc_asd();
-                dgt_count_asd -= 1;
-              }
-              break;
-            default:
-              break;
             }
+            break;
+          case IR_EX:
+            enc_menu_mode = VOLUME; // Back to default mode
+#if defined(DISP)
+            if (dispmode != DSP_LOWBATT)
+            {
+              dispmode = DSP_OTHER;
+              changeDispMode(DSP_RADIO); // Restore screen
+            }
+#endif
+            break;
+          case IR_BS:
+            if (dgt_count_asd < 4 && dgt_count_asd > 0)
+            {
+              dgt_asd = dgt_asd / 10;
+              proc_asd();
+              dgt_count_asd -= 1;
+            }
+            break;
+          default:
+            break;
           }
         }
+      }
 #endif // AUTOSHUTDOWN
     }
     else
@@ -3159,6 +3167,8 @@ void loop()
   {
 #if defined(DISP)
     u8g2.setFont(u8g2_font_t0_17_me);
+    u8g2.setBackgroundColor(TFT_BLACK);
+    u8g2.setForegroundColor(TFT_WHITE);
     uint8_t offset = 6 + u8g2.getFontDescent() + u8g2.getFontAscent();
     uint8_t linehgt = offset + 15;
     char charbuf[24];
@@ -3187,7 +3197,7 @@ void loop()
     }
     else
     {
-#endif      
+#endif
       switch (config->tmode)
       {
       case 3:
@@ -3510,13 +3520,13 @@ void loop()
   if (pwoff_req || ((pwofftime > 0) && (now > pwofftime)))
   {
     ESP_LOGW(TAG, "It's time to shut down! GOOD BYE.");
-    #if defined(DISP)
+#if defined(DISP)
 
     changeDispMode(DSP_OTHER);
     u8g2.setForegroundColor(TFT_RED);
     u8g2.setFont(u8g2_font_t0_22_me);
     u8g2.drawUTF8(0, HGT - 2 * CELLHGT - 4 + LINEOFFSET, "   Bye, bye !");
-    #endif
+#endif
     pwofftime = 0;
     pwoff_req = false;
     fade_req = true;
@@ -3588,9 +3598,9 @@ void loop()
       LittleFS.remove("/config.json");
     }
 #else
-      LittleFS.end();
-      weso.enable(false);
-      LittleFS.format();
+    LittleFS.end();
+    weso.enable(false);
+    LittleFS.format();
 #endif
 #if defined(DISP)
     tft.fillScreen(TFT_BLACK);
@@ -3671,7 +3681,7 @@ void loop()
     oldprgrssw = -1;
 #endif
     audio.stopSong();
-#if defined(DISP)    
+#if defined(DISP)
     clearLines();
 #endif
     getSDFileName(SD_curindex);

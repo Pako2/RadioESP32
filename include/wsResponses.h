@@ -350,11 +350,15 @@ void sendWebConfig(AsyncWebSocketClient *cl)
 			ircommands.add(cmdbuffer);
 		}
 		JsonArray reservedgpios = root["reservedgpios"].to<JsonArray>();
-		for (int i = 0; i < 8; i++)
+		for (int i = 0; i < 16; i++)
 		{
 			if (RESERVEDGPIOS[i] > 0)
 			{
 				reservedgpios.add(RESERVEDGPIOS[i]);
+			}
+			else
+			{
+				break;
 			}
 		}
 		size_t len = 0;

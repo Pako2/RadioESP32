@@ -18,11 +18,12 @@ struct Config {
 	uint8_t scrollgap = 5;
 	uint16_t idle = 30;
 	uint8_t tmode = 1;
-	uint16_t bat0 = 3095;
+	uint16_t bat0 = 4094;
 	uint16_t bat100 = 4095;
-	uint8_t lowbatt = 1;
+	uint8_t lowbatt = 0;
 	uint8_t critbatt = 10;
 	uint16_t batw = 1000;
+	bool batenabled = false;
 	uint8_t sdclock = 1;
 	uint8_t calendar = 0;
 	uint8_t bclkpin = 255;

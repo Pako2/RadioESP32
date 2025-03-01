@@ -34,11 +34,12 @@ bool loadConfiguration(Config *config)
 #endif
 #if defined(DISP)
 	RESERVEDGPIOS[resix++] = 18;
-	RESERVEDGPIOS[resix++] = 23;
-	RESERVEDGPIOS[resix++] = 18;
 	RESERVEDGPIOS[resix++] = 21;
 	RESERVEDGPIOS[resix++] = 22;
 	RESERVEDGPIOS[resix++] = 23;
+#endif
+#if defined(BATTERY)
+	RESERVEDGPIOS[resix++] = 36;
 #endif
 	// ToDo for other display versions ?
 	File configFile = LittleFS.open("/config.json", "r");
@@ -103,6 +104,7 @@ bool loadConfiguration(Config *config)
 	config->batw = config->bat100 - config->bat0;
 	config->lowbatt = general["lowbatt"];
 	config->critbatt = general["critbatt"];
+	config->batenabled = ((config->bat100 <= 4095) && (config->bat0 < (config->bat100-1)));
 #endif
 	if (hardware["encclkpin"].is<uint8_t>())
 	{
