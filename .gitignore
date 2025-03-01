@@ -1,9 +1,13 @@
 .pio
 .vscode
 bin/noota4mb/*
+!bin/noota4mb/README
 bin/wota8mb/*
+!bin/wota8mb/README
 bin/noota4mbnod/*
+!bin/noota4mbnod/README
 bin/wota8mbnod/*
+!bin/wota8mbnod/README
 data/config.json
 include/webh/*
 scripts/__pycache__/*
