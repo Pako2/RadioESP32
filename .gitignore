@@ -10,6 +10,7 @@ bin/wota8mbnod/*
 !bin/wota8mbnod/README
 data/config.json
 include/webh/*
+!include/webh/README
 scripts/__pycache__/*
 scripts/htmlmin/__pycache__/*
 scripts/htmlmin/python3html/__pycache__/*

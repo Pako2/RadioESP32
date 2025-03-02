@@ -15,13 +15,18 @@ The first picture shows the radio playing, the second shows a file playing from 
   <img src="assets/Clock.png"  alt="Clock" title="Clock" width="30%"/>
 </p>
 
+There's no need to describe the appearance of the web interface. You can learn much more from a few screenshots.
+<p float="left">
+  <img src="assets/screenshots.webp"  alt="Screenshots" title="Screenshots" width="99%"/>
+</p>
+
 ## Development with VS Code and PlatformIO
 &nbsp;&nbsp;&nbsp;&nbsp;I use VS Code/PlatformIO as a development environment. Using the *platformio.ini* file, it is possible to create several software variants by specifying or not specifying the so-called "build-flag". The **DATAWEB**, **SDCARD**, **BATTERY**, **AUTOSHUTDOWN** and **OTA** build-flags are particularly important.\
 &nbsp;&nbsp;&nbsp;&nbsp;● Using the **DATAWEB** build-flag, the SW is compiled in a version that has the web server files stored in the "LittleFS" file system area, while without the **DATAWEB** parameter, the SW is compiled in a version in which the web server files are stored in the program memory (using the PROGMEM attribute) in the form of variables. I call the first version <ins>data</ins> for short, the second <ins>webh</ins>. The <ins>data</ins> variant is intended primarily for the development phase (but nothing prevents it from being used as a production one), while the <ins>webh</ins> variant is intended exclusively as a production one and it is more or less impossible to develop with it.\
 &nbsp;&nbsp;&nbsp;&nbsp;● Using the **SDCARD** build-flag, support for the SD card file player function is enabled. Without using the aforementioned build-flag, the device is only able to play radio stations.\
 &nbsp;&nbsp;&nbsp;&nbsp;● Using the **BATTERY** build-flag, support for the supply voltage measurement function is enabled. This is of course suitable in the case of battery power. The display then shows the charge level.\
 &nbsp;&nbsp;&nbsp;&nbsp;● Using the **AUTOSHUTDOWN** build-flag, the support of the function that allows the device to be turned on and off with one button and also the sleep function (adjustable automatic shutdown time) is enabled. Of course, the condition is that the HW is equipped with the necessary circuit.\
-&nbsp;&nbsp;&nbsp;&nbsp;● Using the **OTA** build-flag, the function that allows a comfortable upgrade from the web interface is enabled. See the Upgrade chapter.\
+&nbsp;&nbsp;&nbsp;&nbsp;● Using the **OTA** build-flag, the function that allows a comfortable upgrade from the web interface is enabled. See the Upgrade chapter in the documentation file [UserGuide_EN.pdf](doc/UserGuide_EN.pdf).\
 4 types of “envs” are also prepared in the *platformio.ini* file. With them, you can select both the development kit variant (4 or 8 MB) and the SW variant with or without a display. So, 4 combinations in total (**noota4mb**, **wota8mb**, **noota4mbnod** and **wota8mbnod**). The relevant “env” version is selected by commenting/uncommenting in the [platformio] section.
 
 ### Using the DATAWEB build-flag, I proceed as follows when developing the SW:
