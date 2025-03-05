@@ -21,7 +21,7 @@ for item in env["BUILD_FLAGS"]:
 
 firmware_source = os.path.join(env.subst("$BUILD_DIR"), "firmware.bin",)
 partitions_source = os.path.join(env.subst("$BUILD_DIR"), "partitions.bin")
-littlefs_source = os.path.join(env.subst("$BUILD_DIR"), "littlefs.bin")
+#littlefs_source = os.path.join(env.subst("$BUILD_DIR"), "littlefs.bin")
 
 # after build actions:
 #=====================
@@ -32,11 +32,11 @@ def after_build(source, target, env):
 def after_parts_build(source, target, env):
 	shutil.copy(partitions_source, 'bin/wota8mbnod/partitions_%s_%s.bin' % (kind, version))
 
-def after_fs_build(source, target, env):
-	shutil.copy(littlefs_source, 'bin/wota8mbnod/littlefs_%s_%s.bin' % (kind, version))
+#def after_fs_build(source, target, env):
+#	shutil.copy(littlefs_source, 'bin/wota8mbnod/littlefs_%s_%s.bin' % (kind, version))
 
 
 env.AddPostAction(firmware_source, after_build)
-env.AddPostAction(partitions_source, after_parts_build)
-env.AddPostAction(littlefs_source, after_fs_build)
+#env.AddPostAction(partitions_source, after_parts_build)
+#env.AddPostAction(littlefs_source, after_fs_build)
 

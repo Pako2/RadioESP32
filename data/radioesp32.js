@@ -2034,6 +2034,7 @@ function socketMessageListener(evt) {
       	{
     	  getContent("#controlcontent");
       	}
+        $('.collapse').collapse('hide');
         $("li.active").removeClass("active");
         $("#control").parent().addClass("active");
 				listcontrol(obj.running);
@@ -2097,6 +2098,7 @@ function socketMessageListener(evt) {
       	{
       	  getContent("#controlcontent");
       	}
+        $('.collapse').collapse('hide');
         $("li.active").removeClass("active");
         $("#sdcontrol").parent().addClass("active");
         if (PM_RADIO)
@@ -2339,10 +2341,16 @@ $("#sidebarCollapse").on("click", function() {
 });
 
 $("#status").click(function() {
+  $('.collapse').collapse('hide');
   $("li.active").removeClass("active");
   $("#status").parent().addClass("active");
 	sendMessage("{\"command\":\"status\"}");
 	return false;
+});
+
+$("#dropdown").click(function() {
+  $("li.active").removeClass("active");
+	return true;
 });
 
 $("#network").on("click", (function() {
@@ -2367,11 +2375,15 @@ $("#general").click(function() {
 });
 
 $("#control").click(function() {
+  $("li.active").removeClass("active");
+  $("#control").parent().addClass("active");
   sendMessage("{\"command\":\"radio\"}");
 	return false;
 });
 
 $("#sdcontrol").click(function() {
+  $("li.active").removeClass("active");
+  $("#sdcontrol").parent().addClass("active");
   sendMessage("{\"command\":\"sdplayer\"}");
 	return false;
 });
@@ -2397,6 +2409,9 @@ $("#ntp").click(function() {
 });
 
 $("#backup").click(function() {
+  $('.collapse').collapse('hide');
+  $("li.active").removeClass("active");
+  $("#backup").parent().addClass("active");
 	getContent("#backupcontent");
 	return false;
 });

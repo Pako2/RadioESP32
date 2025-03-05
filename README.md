@@ -35,6 +35,28 @@ There's no need to describe the appearance of the web interface. You can learn m
 3) Once the required functionality has been achieved using steps 1 and 2, the <ins>webh</ins> variant of the software can be created. This is done by running the user script **Download FS & Create WEBH**, which is available via the **PROJECT TASKS/selected_env_version/Custom** menu. This will transform the web server files (from the LittleFS file system) into <ins>webh</ins> files. The utility "pio-esp32-esp8266-filesystem-downloader" by maxgerhardt is used to download the file system image and extract it.
 4) Switch to <ins>webh</ins> variant (in the *platformio.ini* file, the build-flag DATAWEB needs to be removed [commented out]) and compile. The resulting image *firmware_WEBH_XXX.bin* (created during the compilation process) can be found in the **/bin/selected_env_version** directory. The version designation *XXX* is also set as a “build-flag” in the *platformio.ini* file before compilation.
 
+## How to install
+Experienced Tinkerers who have installed VS Code with PlatformIO supplement and normally use it probably do not need any other advice. Everything is described in the previous text. However, there may be some less experienced users who are interested in trying the project and do not need to make their own modifications. In this case, they can use pre-compiled binaries and install them in ESP32 without VS Code/Platformio.
+The procedure is as follows (valid only to Windows users):
+1. The default assumption is that the development kit is connected to the USB port of your computer and you know the number of (virtual) COM port. Suppose it's a *COM10*
+2. Download the [Latest release](https://github.com/Pako2/RadioESP32/releases/tag/v1.0.2) (for example **RadioESP32-1.0.3.zip**
+) and unpack the ZIP file to some suitable (work) folder
+3. In the selected folder, the **bin** folder appears that contains everything you need
+4. Open the command line window (**cmd.exe**) so that you are in the above folder **bin**
+5. Enter the **flash.bat** command. The following offer should appear:
+<p float="left">
+  <img src="assets/flash.bat.png"  alt="Flash menu" title="Flash menu"/>
+</p>
+
+6. Select the desired firmware version (ie press the appropriate number) and then press Enter
+7. You will then be prompted to enter a COM port. Write the corresponding name (by example in point **1** it would be *COM10*) and press Enter
+8. There should be installed the necessary SW into ESP32
+9. After completion you can continue according to the **First start** chapter\
+
+<ins>Note:</ins>
+I strongly recommend development kits with 8MB memory. This will greatly facilitate any subsequent upgrades, as the configuration will remain in force even after the upgrade.
+On the other hand, in the case of 4MB development kits, the configuration is deleted (during upgrade) and must be done again. Of course, it is possible to make it easier when you make a backup first and make a restore after upgrading. In the test phase, the 4MB version is also convenient, everything should work normally.
+
 ## First start
 When the device is started for the first time, it runs in default settings and in AP mode. On the PC, connect to the **RadioESP32** network and in the browser to the address **192.168.4.1**. A web page should appear through which the device settings need to be made.
 

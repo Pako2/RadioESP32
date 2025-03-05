@@ -2523,7 +2523,7 @@ void setup()
       "}";
   maintask = xTaskGetCurrentTaskHandle(); // My taskhandle
   // DEBUG !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  vTaskDelay(10000 / portTICK_PERIOD_MS); // Wait for PlatformIO monitor to start
+  // vTaskDelay(10000 / portTICK_PERIOD_MS); // Wait for PlatformIO monitor to start
   // DEBUG !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   Serial.begin(115200);
@@ -3130,7 +3130,7 @@ void loop()
     uint8_t linehgt = offset + 15;
     u8g2.setForegroundColor(TFT_WHITE);
     char charbuf[24];
-    sprintf(charbuf, "RadioESP32 - %s", STRINGIFY(VERSION));
+    sprintf(charbuf, "RadioESP32 %s", STRINGIFY(VERSION));
     drawUTF8(0, offset, charbuf);
     drawUTF8(0, linehgt + offset, "SSID:");
     drawUTF8(0, 2 * linehgt + offset - 8, WiFi.SSID().c_str());

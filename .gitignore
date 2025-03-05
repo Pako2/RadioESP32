@@ -1,5 +1,6 @@
 .pio
 .vscode
+bin/*
 bin/noota4mb/*
 !bin/noota4mb/README
 bin/wota8mb/*
