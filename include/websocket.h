@@ -41,7 +41,7 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
     {
       if (pmode == PM_RADIO)
       {
-        sendRadio(NULL);
+        sendRadio();
       }
 #if defined(SDCARD)
       else
@@ -68,10 +68,9 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
       prgrssbar(0, true);
       clearLines();
 #endif
-      audpreset = 254;
       setPreset(reqpreset);
     }
-    sendRadio(NULL);
+    sendRadio();
   }
   else if (strcmp(command, "restart") == 0)
   {
@@ -198,7 +197,7 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
   }
   else
   {
-    sendRadio(NULL);
+    sendRadio();
   }
 }
   else if (strcmp(command, "preset") == 0)

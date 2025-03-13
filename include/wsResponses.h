@@ -143,13 +143,13 @@ void sendStatus(AsyncWebSocketClient *cl)
 	}
 }
 
-void sendRadio(AsyncWebSocketClient *cl)
+void sendRadio()
 {
 	if (weso.count() > 0)
 	{
 		JsonDocument root;
 		root["command"] = "radio";
-		if (reqpreset >= 254)
+		if (reqpreset > presetnum)
 		{
 			root["station"] = station;
 		}
@@ -170,14 +170,7 @@ void sendRadio(AsyncWebSocketClient *cl)
 			if (buffer && weso.count() > 0)
 			{
 				serializeJson(root, (char *)buffer->get(), len + 1);
-				if (cl == NULL)
-				{
-					weso.textAll(buffer);
-				}
-				else
-				{
-					cl->text(buffer);
-				}
+				weso.textAll(buffer);
 			}
 		}
 	}

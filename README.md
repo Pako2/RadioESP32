@@ -7,6 +7,29 @@
 &nbsp;&nbsp;&nbsp;&nbsp;The website design, the way the ESP32 communicates with the computer (via a web browser), and a few other solutions (like how to upgrade or work with the configuration file) are taken from the [esp-rfid](https://github.com/esprfid/esp-rfid) project. I have used it in several projects and it exactly suits my needs and ideas.\
 &nbsp;&nbsp;&nbsp;&nbsp;Complete project documentation can be found in the [UserGuide_EN.pdf](doc/UserGuide_EN.pdf) file.
 
+## A few differences from Edzelf's ESP32Radio:
+1. There is no support for OLED displays. The options are either TFT display or none
+2. The SD card is not connected in SPI mode, but in 1-bit SD mode (the SD_MMC.h library is used)
+3. It cannot be controlled using MQTT, nor via commands via the serial port
+4. SPIFFS is not used, but LittleFS
+5. The device configuration is not stored in the NVS partition, but as a file in the SPIFFS partition (which is actually of the LittleFS type)
+6. The last played station and volume are not remembered. After power on/reset, the default volume is used and the default station is played
+7. No deep sleep mode is used, but a real physical shutdown of the power supply (so the display, DAC and amplifier are also turned off)
+8. The device also has an automatic power off function after a set time (so-called sleep timer)
+9. Wider support for audio formats (audio files with mp3, m4a, ogg, aac, wav and flac formats can be played)
+10. More comfortable audio player. Supports common commands such as pause/play, stop, jump forward and backward. The display and the web page show the current position
+11. In the tracklist.dat file, all files (within one folder) are sorted alphabetically, so there is no problem with playing audio books (but it is possible to select the playback mode in random order)
+12. Wider support for infrared remote control protocols (and therefore also controllers) and a much more comfortable way of learning commands
+13. The number of radio station presets is also limited to 99. However, **each** preset can be selected (using the remote control) by its number (of course, not only a single-digit but also a two-digit number !)
+14. Characters with diacritics (such as č, ř, ä, ü, etc.) are displayed normally (i.e. including diacritics), so that the texts are easier to read
+15. The station name is displayed as defined by the user in the preset list, not as presented in the metadata
+16. Texts are displayed in a significantly larger font. If the text does not fit on one line, scrolling text is used
+17. OTA via web interface. The user can use the device's built-in web server to:\
+&nbsp;&nbsp;&nbsp;A. find out that there is a new release\
+&nbsp;&nbsp;&nbsp;B. download the new release to the computer (however, unpacking the downloaded ZIP file must be done outside the web interface)\
+&nbsp;&nbsp;&nbsp;C. perform an upgrade
+
+### Display and embedded web server preview
 For illustration, you can see three photos of the display. You may be surprised to see that some of the text lines are blurred. The explanation is simple. This is scrolling text, because otherwise it wouldn't fit on the display!\
 The first picture shows the radio playing, the second shows a file playing from an SD card, and the third shows the clock.
 <p float="left">
@@ -19,6 +42,14 @@ There's no need to describe the appearance of the web interface. You can learn m
 <p float="left">
   <img src="assets/screenshots.webp"  alt="Screenshots" title="Screenshots" width="99%"/>
 </p>
+
+As you can see in the screenshots, the user has quite a lot of freedom in connection - he can set most of the GPIO via the web interface.
+**The exception is these three GPIO groups:**
+1. Display connection (SPI signals are fixed by the manufacturer and control signals are set in *platformio.ini* - forced by the used **TFT_eSPI** library)
+2. Selection of ADC channel for battery measurement (I chose channel **adc1-0**, which corresponds to **GPIO 36**)
+3. SD card connection in 1-bit SD mode (fixed by the manufacturer)\
+
+It is therefore obvious that the interested party can try out most of the SW functions even without an "official" printed circuit board.
 
 ## Development with VS Code and PlatformIO
 &nbsp;&nbsp;&nbsp;&nbsp;I use VS Code/PlatformIO as a development environment. Using the *platformio.ini* file, it is possible to create several software variants by specifying or not specifying the so-called "build-flag". The **DATAWEB**, **SDCARD**, **BATTERY**, **AUTOSHUTDOWN** and **OTA** build-flags are particularly important.\
@@ -39,8 +70,7 @@ There's no need to describe the appearance of the web interface. You can learn m
 Experienced Tinkerers who have installed VS Code with PlatformIO supplement and normally use it probably do not need any other advice. Everything is described in the previous text. However, there may be some less experienced users who are interested in trying the project and do not need to make their own modifications. In this case, they can use pre-compiled binaries and install them in ESP32 without VS Code/Platformio.
 The procedure is as follows (valid only to Windows users):
 1. The default assumption is that the development kit is connected to the USB port of your computer and you know the number of (virtual) COM port. Suppose it's a *COM10*
-2. Download the [Latest release](https://github.com/Pako2/RadioESP32/releases/tag/v1.0.2) (for example **RadioESP32-1.0.3.zip**
-) and unpack the ZIP file to some suitable (work) folder
+2. Download the latest [RadioESP32_binaries.zip](https://github.com/Pako2/RadioESP32/releases/latest/download/RadioESP32_binaries.zip) and unpack the ZIP file to some suitable (work) folder
 3. In the selected folder, the **bin** folder appears that contains everything you need
 4. Open the command line window (**cmd.exe**) so that you are in the above folder **bin**
 5. Enter the **flash.bat** command. The following offer should appear:
@@ -51,7 +81,7 @@ The procedure is as follows (valid only to Windows users):
 6. Select the desired firmware version (ie press the appropriate number) and then press Enter
 7. You will then be prompted to enter a COM port. Write the corresponding name (by example in point **1** it would be *COM10*) and press Enter
 8. There should be installed the necessary SW into ESP32
-9. After completion you can continue according to the **First start** chapter\
+9. After completion you can continue according to the **First start** chapter
 
 <ins>Note:</ins>
 I strongly recommend development kits with 8MB memory. This will greatly facilitate any subsequent upgrades, as the configuration will remain in force even after the upgrade.

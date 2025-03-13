@@ -910,7 +910,7 @@ void audio_showstation(const char *info)
     snprintf(tmp, BUFFLEN, info);
     cleanText(tmpbf);
     snprintf(station, BUFFLEN, tmpbf);
-    reqpreset = 255;
+    //reqpreset = 255;
 #if defined(DISP)
     show_station(tmpbf);
 #endif
@@ -1008,8 +1008,14 @@ void drawColon(bool disp)
 void testUrl(const char *url)
 {
   testurlFlag = true;
+  station[0] = '\0';
+#if defined(DISP)
+    show_station(">> T E S T <<");
+#endif
   artist[0] = '\0';
   title[0] = '\0';
+  reqpreset = 253;
+  sendRadio();
 #if defined(DISP)
   cpycharar(testurl, url, BUFFLEN - 1);
 #endif
@@ -1719,6 +1725,7 @@ void setPreset(uint8_t prst)
 {
   artist[0] = '\0';
   title[0] = '\0';
+  audpreset = 254;// set diff preset
   reqpreset = prst;
   enc_preset = prst;
   char nr[6];
@@ -1814,7 +1821,6 @@ void proc_digit(uint8_t dig)
     if (pmode != PM_RADIO)
     {
       reqpreset = 254;
-      audpreset = 254;
       pmode = PM_RADIO;
 #if defined(DISP)
       drawIcon(PI_RADIO);
@@ -1992,7 +1998,6 @@ void chk_enc()
       drawIcon(PI_RADIO);
       prgrssbar(0, true);
 #endif
-      audpreset = 254; // set diff preset
       setPreset(enc_preset);
       enc_menu_mode = VOLUME; // Back to default mode
       break;
@@ -2243,17 +2248,19 @@ void audioTask(void *parameter)
           conn = audio.connecttohost(testurl);
         }
         reqpreset = 254;
+        audpreset = 254;
       }
-      else
+      else if (reqpreset <= presetnum)
       {
+        testurlFlag = false;
         bool conn = audio.connecttohost(presets[reqpreset].url);
         if (!conn)
         {
           vTaskDelay(1000 / portTICK_PERIOD_MS);
           conn = audio.connecttohost(presets[reqpreset].url);
         }
+        audpreset = reqpreset;
       }
-      audpreset = reqpreset;
     }
 #if defined(SDCARD)
     else if ((pmode == PM_SDCARD) && (SD_curindex != SD_oldindex))
@@ -2990,10 +2997,9 @@ void irloop()
               prgrssbar(0, true);
               clearLines();
 #endif
-              audpreset = 254;
               setPreset(reqpreset);
             }
-            sendRadio(NULL);
+            sendRadio();
             break;
           case IR_SD:
 #if defined(SDCARD)
@@ -3241,7 +3247,7 @@ void loop()
 #endif
     if (pmode == PM_RADIO)
     {
-      sendRadio(NULL);
+      sendRadio();
     }
 #if defined(SDCARD)
     else
@@ -3627,7 +3633,13 @@ void loop()
       ix = getPresetByNr(dgt_cmd);
       if (ix != 255)
       {
+        if (pmode != PM_RADIO)
+        {
+          reqpreset = 254;
+          pmode = PM_RADIO;
+        }
         enc_preset = ix;
+        ESP_LOGW(TAG, "Remote IR number: %2d", ix); // For debugging
         setPreset(enc_preset);
       }
     }

@@ -423,6 +423,7 @@ bool getsdtracks(const char *dirname, uint8_t levels)
               (strcmp(tolowercase(ext), ".m4a") == 0) ||
               (strcmp(tolowercase(ext), ".ogg") == 0) ||
               (strcmp(tolowercase(ext), ".aac") == 0) ||
+              (strcmp(tolowercase(ext), ".wav") == 0) ||
               (strcmp(tolowercase(ext2), ".flac") == 0))
           {
             sprintf(fullName, "%s/%s", folders[i], files[j]);
