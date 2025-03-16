@@ -47,7 +47,7 @@ As you can see in the screenshots, the user has quite a lot of freedom in connec
 **The exception is these three GPIO groups:**
 1. Display connection (SPI signals are fixed by the manufacturer and control signals are set in *platformio.ini* - forced by the used **TFT_eSPI** library)
 2. Selection of ADC channel for battery measurement (I chose channel **adc1-0**, which corresponds to **GPIO 36**)
-3. SD card connection in 1-bit SD mode (fixed by the manufacturer)\
+3. SD card connection in 1-bit SD mode (fixed by the manufacturer)
 
 It is therefore obvious that the interested party can try out most of the SW functions even without an "official" printed circuit board.
 

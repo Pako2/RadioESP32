@@ -760,6 +760,7 @@ function commit() {
 }
 
 function handleDHCP(ntw) {
+  $(':radio[name="dhcpenabled"][value='+ntw.dhcp.toString()+']').prop('checked', true);
 	if (ntw.dhcp === 0) {
 		document.getElementById("ipaddress").value = ntw.ipaddress;
 		document.getElementById("subnet").value = ntw.subnet;
@@ -770,7 +771,6 @@ function handleDHCP(ntw) {
 		$("#staticip2").slideDown();
 		$("#staticip2").show();
 	} else {
-	  $(':radio[name="dhcpenabled"][value=1]').prop('checked', true);
 		$("#staticip2").slideUp();
 		$("#staticip1").slideUp();
 	}

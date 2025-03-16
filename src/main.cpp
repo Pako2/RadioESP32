@@ -3130,6 +3130,7 @@ void loop()
   {
     WF_MODE = WF_STA;
 #if defined(DISP)
+    dispmode = DSP_OTHER;
     tft.fillScreen(TFT_BLACK);
     u8g2.setFont(u8g2_font_t0_17_me);
     uint8_t offset = 6 + u8g2.getFontDescent() + u8g2.getFontAscent();
@@ -3148,7 +3149,10 @@ void loop()
     if (reconnect)
     {
       vTaskDelay(8000 / portTICK_PERIOD_MS);
-      audpreset = 254;
+      if (pmode == PM_RADIO)
+      {
+        audpreset = 254;
+      }
       reconnect = false;
     }
     else
@@ -3160,13 +3164,16 @@ void loop()
 #if defined(DISP)
     changeDispMode(DSP_RADIO);
 #endif
-    char nr[6];
-    sprintf(nr, "[%02d] ", presets[enc_preset].nr);
-    cpycharar(station, nr, 5);
-    cpycharar(station + 5, presets[enc_preset].name, BUFFLEN - 6);
+    if (pmode == PM_RADIO)
+    {
+      char nr[6];
+      sprintf(nr, "[%02d] ", presets[enc_preset].nr);
+      cpycharar(station, nr, 5);
+      cpycharar(station + 5, presets[enc_preset].name, BUFFLEN - 6);
 #if defined(DISP)
-    show_station(station);
+      show_station(station);
 #endif
+    }
     gotIP = false;
   }
   if (APstart)
@@ -3739,7 +3746,7 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info)
     break;
 
   case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-    if (WF_MODE != WF_WAITSTA)
+    if ((WF_MODE != WF_WAITSTA) || rcnnct)
     {
       reconnect = true;
       rcnnct = false;
