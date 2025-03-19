@@ -116,7 +116,7 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
       time(&now);
       pwofftime = now + 60 * val;
 #if defined(DISP)
-      if (dispmode==DSP_CLOCK)
+      if (dispmode == DSP_CLOCK)
       {
         changeDispMode(DSP_PWOFF);
       }
@@ -128,8 +128,8 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
       pwoffminutes = config->dasd;
       ESP_LOGW(WSTAG, "Automatic shutdown mode canceled !");
 #if defined(DISP)
-        dispmode = DSP_OTHER;
-        changeDispMode(DSP_CLOCK);
+      dispmode = DSP_OTHER;
+      changeDispMode(DSP_CLOCK);
 #endif
     }
   }
@@ -181,25 +181,14 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
       configFile.close();
     }
   }
-#if defined(SDCARD)
-  else if (strcmp(command, "sdplayer") == 0)
-{
-  if (SD_okay)
+  else if (strcmp(command, "steppreset") == 0)
   {
-    if (pmode != PM_SDCARD)
-    {
-      oldsdix_req = true;
-    }
-    else
-    {
-      updateTrack(0);
-    }
+#if defined(DISP)
+    changeDispMode(DSP_RADIO);
+#endif
+    int8_t val = root["val"];
+    updatePreset(val, true);
   }
-  else
-  {
-    sendRadio();
-  }
-}
   else if (strcmp(command, "preset") == 0)
   {
 #if defined(DISP)
@@ -208,13 +197,24 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
     uint16_t prst = root["preset"];
     setPreset(prst - 1);
   }
-  else if (strcmp(command, "steppreset") == 0)
+#if defined(SDCARD)
+  else if (strcmp(command, "sdplayer") == 0)
   {
-#if defined(DISP)
-    changeDispMode(DSP_RADIO);
-#endif
-    int8_t val = root["val"];
-    updatePreset(val, true);
+    if (SD_okay)
+    {
+      if (pmode != PM_SDCARD)
+      {
+        oldsdix_req = true;
+      }
+      else
+      {
+        updateTrack(0);
+      }
+    }
+    else
+    {
+      sendRadio();
+    }
   }
   else if (strcmp(command, "steptrack") == 0)
   {
@@ -274,7 +274,7 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
     sendSDstat(0);
 #if defined(DISP)
     prgrssbar(0, false);
-  //prgrssbar(0, true);
+    // prgrssbar(0, true);
 #endif
   }
   else if (strcmp(command, "track") == 0)
@@ -336,7 +336,7 @@ void onWsEvent(AsyncWebSocket *server_, AsyncWebSocketClient *client, AwsEventTy
     }
     else
     {
-// message is comprised of multiple frames or the frame is split into multiple packets
+      // message is comprised of multiple frames or the frame is split into multiple packets
       if (index == 0)
       {
         if (info->num == 0 && client->_tempObject == NULL)

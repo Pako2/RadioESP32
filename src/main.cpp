@@ -1521,6 +1521,7 @@ void changeDispMode(disp_mode_t mode)
   }
   if (mode != DSP_LOWBATT)
   {
+#if defined(BATTERY)
     if (config->batenabled)
     {
       uint16_t val = adcval;
@@ -1532,6 +1533,7 @@ void changeDispMode(disp_mode_t mode)
         return;
       }
     }
+#endif
     dispmode = mode;
     asdmode = false;
 #if defined(DISP)
@@ -2469,15 +2471,15 @@ void setup()
       "\"encdtpin\":255,"
       "\"encswpin\":255,"
       "\"irpin\":255,"
-      "\"mutepin\":255,"
 #if defined(AUTOSHUTDOWN)
       "\"onoffipin\":255,"
       "\"onoffopin\":255,"
 #endif
 #if defined(SDCARD)
       "\"sdpullup\":0,"
-      "\"sddpin\":255"
+      "\"sddpin\":255,"
 #endif
+      "\"mutepin\":255"
       "},"
       "\"general\":{"
       "\"psswd\":\"YWRtaW4=\","
