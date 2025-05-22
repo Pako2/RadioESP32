@@ -235,7 +235,7 @@ int adcvalraw = 0;
 uint16_t adcval = 0;
 bool batbarflag = false;
 #define LOG_2(n) ((n == 8) ? 3 : ((n == 16) ? 4 : ((n == 32) ? 5 : 6)))
-#define FILTER_LEN 32 // allowed values: 8, 16, 32, 64
+#define FILTER_LEN 16 // allowed values: 8, 16, 32, 64
 const uint8_t FILTER_SHIFT = LOG_2(FILTER_LEN);
 const uint8_t FILTER_MASK = FILTER_LEN - 1;
 uint16_t *Adc1_Buffer; // PSRAM !
@@ -552,7 +552,7 @@ void clearLines()
 #if defined(DISP)
   for (uint8_t row = 0; row < ROWSNUM; row++)
   {
-    updateLine(row, "");
+    updateLine(row, (char *)"");
   }
 #endif
 }
@@ -910,7 +910,7 @@ void audio_showstation(const char *info)
     snprintf(tmp, BUFFLEN, info);
     cleanText(tmpbf);
     snprintf(station, BUFFLEN, tmpbf);
-    //reqpreset = 255;
+    // reqpreset = 255;
 #if defined(DISP)
     show_station(tmpbf);
 #endif
@@ -1010,7 +1010,7 @@ void testUrl(const char *url)
   testurlFlag = true;
   station[0] = '\0';
 #if defined(DISP)
-    show_station(">> T E S T <<");
+  show_station((char *)">> T E S T <<");
 #endif
   artist[0] = '\0';
   title[0] = '\0';
@@ -1029,9 +1029,9 @@ void batbar()
   if (config->batenabled)
   {
     uint16_t val = adcval;
-    val = (val > config->bat0) ? val - config->bat0 : 0;
-    val = (val < config->batw) ? val : config->batw;
-    uint8_t perc = 100 * (val / (float)config->batw);
+    val = (val > config->bat0) ? val : config->bat0;
+    val = (val < config->bat100) ? val : config->bat100;
+    uint8_t perc = 100 * ((val - config->bat0 )/ (float)config->batw);
     if (config->lowbatt)
     {
       if (perc <= config->critbatt)
@@ -1047,7 +1047,7 @@ void batbar()
 
     if ((dispmode == DSP_RADIO) || (dispmode == DSP_DIMMED))
     {
-      uint8_t w1 = uint8_t((val / (float)config->batw) * (WID - 2)); // uint16_t ?
+      uint16_t w1 = uint16_t(perc/100.0 * (WID - 2));
       batsprite.fillSprite(TFT_RED);
       batsprite.fillRect(0, 0, w1, 6 - 2, TFT_GREEN);
       batbarflag = true; // flag for display loop
@@ -1525,12 +1525,15 @@ void changeDispMode(disp_mode_t mode)
     if (config->batenabled)
     {
       uint16_t val = adcval;
-      val = (val > config->bat0) ? val - config->bat0 : 0;
-      val = (val < config->batw) ? val : config->batw;
-      uint8_t perc = 100 * (val / (float)config->batw);
-      if (perc <= config->critbatt)
+      val = (val > config->bat0) ? val : config->bat0;
+      val = (val < config->bat100) ? val : config->bat100;
+      uint8_t perc = 100 * ((val - config->bat0) / (float)config->batw);
+      if (config->lowbatt)
       {
-        return;
+        if (perc <= config->critbatt)
+        {
+          return;
+        }
       }
     }
 #endif
@@ -1727,7 +1730,7 @@ void setPreset(uint8_t prst)
 {
   artist[0] = '\0';
   title[0] = '\0';
-  audpreset = 254;// set diff preset
+  audpreset = 254; // set diff preset
   reqpreset = prst;
   enc_preset = prst;
   char nr[6];
@@ -2573,9 +2576,9 @@ void setup()
 #if defined(DISP)
   rows = (RowData *)ps_malloc(ROWSNUM * sizeof(RowData));
   PIparams = (pi_params *)ps_malloc(9 * sizeof(pi_params));
-  updateLine(0, "");
-  updateLine(1, "");
-  updateLine(2, "");
+  updateLine(0, (char *)"");
+  updateLine(1, (char *)"");
+  updateLine(2, (char *)"");
 #endif
 
   uint8_t ypos = 0;

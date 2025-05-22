@@ -125,10 +125,12 @@ void sendStatus(AsyncWebSocketClient *cl)
 		root["gateway"] = ip3;
 		root["netmask"] = ip4;
 #if defined(BATTERY)
-		uint16_t adcval_ = (adcval > config->bat0) ? adcval - config->bat0 : 0;
-		adcval_ = (adcval < config->bat100) ? adcval_ : config->batw;
-		root["battery"] = (uint8_t)(0.5 + (100 * (float)adcval_ / config->batw));
-#endif
+		uint16_t adcval_ = adcval;
+		adcval_ = (adcval_ > config->bat0) ? adcval_ : config->bat0;
+		adcval_ = (adcval_ < config->bat100) ? adcval_ : config->bat100;
+        root["battery"] = (uint8_t)(0.5 + (100 * (float)(adcval_ - config->bat0)/ config->batw));
+
+		#endif
 		size_t len = 0;
 		len = measureJson(root);
 		if (len)

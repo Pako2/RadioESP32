@@ -1,4 +1,7 @@
 # RadioESP32
+## Notice
+This project is not intended for **ESP32-S3** microcontrollers. Due to several differences, I have decided to dedicate a separate repository for them: [RadioESP32S3](https://github.com/Pako2/RadioESP32S3).
+
 ## Introduction
 &nbsp;&nbsp;&nbsp;&nbsp;First of all, it is worth mentioning that this project would probably never have been created without the popular project [ESP32Radio-V2](https://github.com/Edzelf/ESP32Radio-V2) by [Edzelf](https://github.com/Edzelf). I am very grateful to the author for it and thank him for his work. Originally, of course, I took over the original project in its unchanged form, but very soon it stopped being convenient for me. I especially disliked the fact that the display did not display characters with diacritics.\
 &nbsp;&nbsp;&nbsp;&nbsp;The second biggest problem for me was the functioning of the file player from the SD card. One of my requirements for the device was that it should allow listening to audiobooks. In this case, however, the files need to be played in a defined (i.e. alphabetical) order. But that did not work with the original SW. After copying the files from the HDD to the SD card, the files were always arranged in a kind of random order and listening to the individual parts in the correct order was very complicated (the correct part had to be selected manually).\
@@ -105,11 +108,11 @@ In the first phase of development, I used the VS1053 module (as a DAC) following
 <ins>Note:</ins> The printed circuit board also includes the possibility of using external PSRAM memory, but this is not installed when using the WROVER kit, it is already present on the mentioned kit.
 
 <p float="left">
-  <img src="assets/ESP32-DevKitC-VE-T.png"  alt="SuperMini top side" title="SuperMini top side" width="45%" />
-  <img src="assets/ESP32-DevKitC-VE-B.png"  alt="SuperMini bottom side" title="SuperMini bottom side" width="45%" /> 
+  <img src="assets/ESP32-DevKitC-VE-T.png"  alt="Development board - top side" title="Development board - top side" width="45%" />
+  <img src="assets/ESP32-DevKitC-VE-B.png"  alt="Development board - bottom side" title="Development board - bottom side" width="45%" /> 
 </p>
 
-I decided that the basic supply voltage of the device will be 12V, because it can be very well implemented with three 18650 Lion cells. However, the ESP32 development kit requires a voltage of 5V (as well as some other components) and therefore it is necessary to use a suitable step-down module. I chose the **Mini560** module, which is sufficiently dimensioned (both voltage and current) and is equipped with an EN input (necessary for my needs).
+I decided that the basic supply voltage of the device will be 12V, because it can be very well implemented with three 18650 Li-ion cells. However, the ESP32 development kit requires a voltage of 5V (as well as some other components) and therefore it is necessary to use a suitable step-down module. I chose the **Mini560** module, which is sufficiently dimensioned (both voltage and current) and is equipped with an EN input (necessary for my needs).
 <p float="left">
   <img src="assets/Mini560-T.png"  alt="Step-down converter top side" title="Step-down converter top side" width="45%" />
   <img src="assets/Mini560-B.png"  alt="PStep-down converter bottom side" title="Step-down converter bottom side" width="45%" /> 
@@ -148,7 +151,7 @@ Finally, it was necessary to solve the method of connecting the supply voltage a
 </p>
 
 ## Assembled board
-Finally, you can see a few pictures of the printed circuit board completely assembled and including the installed subboards (ESP32 development kit and DAC).
+Finally, you can see a few pictures of the printed circuit board completely assembled and including the installed subboards (ESP32 development kit and DAC). I also added one photo of the finished radio (powered by three 18650 Li-ion cells).
 
 ![PCB 1](assets/Whole01.png)
 ![PCB 2](assets/Whole02.png)
@@ -156,6 +159,7 @@ Finally, you can see a few pictures of the printed circuit board completely asse
 ![PCB 4](assets/Whole04.png)
 ![PCB 5](assets/Whole05.png)
 ![PCB 6](assets/Detail01.png)
+![RADIO](assets/Whole_radio.png)
 
 ### License
 The code parts written by the author of the **RadioESP32** project are licensed under [GPL-3.0](LICENSE), 3rd party libraries that are used by this project are licensed under different license schemes, please check them out as well.
