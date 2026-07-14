@@ -334,7 +334,7 @@ uint8_t listDirs(const char *dirname, uint8_t levels)
   size_t namelen = strlen(dirname);
   if (namelen < MAXFOLDLEN)
   {
-    strcpy(folders[folderNum++], dirname);//crash
+    strcpy(folders[folderNum++], dirname);
     if (folderNum >= MAXFOLDERS)
     {
       ESP_LOGW(STAG, "Too many folders !!!");
@@ -541,7 +541,7 @@ void SDtask(void *parameter)
                        SD_lastmp3spec);
             }
             sdready_req = true;
-          }
+           }
         }
       }
       else // SD card removed !

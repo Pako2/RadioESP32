@@ -1,7 +1,8 @@
-#define STR(A) #A
-#define STRINGIFY(A) STR(A)
+#define MYSTR(A) #A
+#define STRINGIFY(A) MYSTR(A)
 #define REPLACEMENTCHARACTER '*'
 #define sv_ DRAM_ATTR static volatile
+#define AUDIO_RUNTIME 0
 
 #include "Arduino.h"
 #include <ArduinoJson.h>
@@ -390,7 +391,11 @@ Username and password are used in two cases:
 const char *http_username = "admin";
 const char *http_password = "admin";
 
+#if AUDIO_RUNTIME
+Audio* audio = nullptr;
+#else
 Audio audio;
+#endif
 TaskHandle_t Task0, xsdtask, maintask;
 
 #define FSIF true // Format LittleFS if not existing
@@ -426,7 +431,7 @@ bool reconnect = false;
 bool rcnnct = false;
 bool scanfinished = false;
 bool muteflag = false; // Mute output
-uint8_t reqvol = 12;   // Requested volume
+uint8_t reqvol = 50;   // Requested volume
 player_mode pmode = PM_RADIO;
 int16_t nets;
 AsyncWebServer server(80);
@@ -486,7 +491,6 @@ bool proc1s_req = false; // Set proc1s requested
 bool proc5s_req = false; // Set proc5s requested
 struct tm timeinfo;      // Will be filled by NTP server
 unsigned long currentMillis = 0;
-float btvol = 0.12;       // Bluetooth volume
 hw_timer_t *timer = NULL; // For timer
 
 // Rotary encoder stuff
@@ -514,7 +518,7 @@ bool pwoffclick = false; // True if power off click detected
 uint8_t table_state; // Internal state
 
 const uint8_t _ttable_full[7][4] = {
-    //   00          01           10           11                  // BA
+    //   00          01           10           11          // BA
     {R_START, F_CW_BEGIN, F_CCW_BEGIN, R_START},           // R_START
     {F_CW_NEXT, R_START, F_CW_FINAL, R_START | DIR_CW},    // F_CW_FINAL
     {F_CW_NEXT, F_CW_BEGIN, R_START, R_START},             // F_CW_BEGIN
@@ -562,7 +566,11 @@ void clearLines()
 
 bool getStopped()
 {
+  #if AUDIO_RUNTIME
+  return ((audio->getAudioFileDuration() == 0) && !audio->isRunning());
+  #else
   return ((audio.getAudioFileDuration() == 0) && !audio.isRunning());
+  #endif
 }
 
 //**************************************************************************************************
@@ -834,19 +842,13 @@ void show_title(char *info)
 }
 #endif
 
-// ESP32-audioI2S optional callbacks:
-// #if defined(DEBUG)
-void audio_info(const char *info)
-{
-  Serial.print("I2S AUDIO_INFO        ");
-  Serial.println(info);
-}
-// #endif
 
 void audio_id3data(const char *info)
 {
+#if defined(DEBUG)
   Serial.print("id3data     ");
   Serial.println(info);
+#endif
   char *indx;
   indx = strstr(info, "Artist: ");
   if (indx == info)
@@ -910,7 +912,6 @@ void audio_showstation(const char *info)
     snprintf(tmp, BUFFLEN, info);
     cleanText(tmpbf);
     snprintf(station, BUFFLEN, tmpbf);
-    // reqpreset = 255;
 #if defined(DISP)
     show_station(tmpbf);
 #endif
@@ -918,7 +919,6 @@ void audio_showstation(const char *info)
     testurlFlag = false;
   }
 }
-
 void audio_showstreamtitle(const char *info)
 {
   ESP_LOGW(TAG, " : \"%s\"", info);
@@ -979,6 +979,33 @@ void audio_showstreamtitle(const char *info)
     updatemetadata = true;
   }
 }
+
+// ESP32-audioI2S callbacks:
+void audio_info(Audio::msg_t m) {
+#if defined(DEBUG)
+    Serial.printf("I2S AUDIO_INFO        %s: %s\n", m.s, m.msg);
+#endif
+    switch(m.e){
+        case Audio::evt_streamtitle:    audio_showstreamtitle(m.msg); break;
+        case Audio::evt_eof:            audio_eof_mp3(m.msg); break;
+        case Audio::evt_id3data:        audio_id3data(m.msg); break; // id3-data or metadata
+        case Audio::evt_name:           audio_showstation(m.msg); break; // station name or icy-name
+/*
+        case Audio::evt_info:           Serial.printf("info: ....... %s\n", m.msg); break;
+        case Audio::evt_bitrate:        Serial.printf("bitrate: .... %s\n", m.msg); break; // icy-bitrate or bitrate from metadata
+        case Audio::evt_icyurl:         Serial.printf("icy URL: .... %s\n", m.msg); break;
+        case Audio::evt_lasthost:       Serial.printf("last URL: ... %s\n", m.msg); break;
+        case Audio::evt_icylogo:        Serial.printf("icy logo: ... %s\n", m.msg); break;
+        case Audio::evt_icydescription: Serial.printf("icy descr: .. %s\n", m.msg); break;
+        case Audio::evt_image: for(int i = 0; i < m.vec.size(); i += 2){
+                                        Serial.printf("cover image:  segment %02i, pos %07lu, len %05lu\n", i / 2, m.vec[i], m.vec[i + 1]);} break; // APIC
+        case Audio::evt_lyrics:         Serial.printf("sync lyrics:  %s\n", m.msg); break;
+        case Audio::evt_log   :         Serial.printf("audio_logs:   %s\n", m.msg); break;
+*/
+        default:                        break;
+    }
+}
+
 
 #if defined(DISP)
 void drawColon(bool disp)
@@ -1079,7 +1106,11 @@ void prgrssbar(uint32_t val, bool clr)
     else
     {
       uint8_t w1 = 0;
+      #if AUDIO_RUNTIME
+      uint32_t drtn = audio->getAudioFileDuration();
+      #else
       uint32_t drtn = audio.getAudioFileDuration();
+      #endif
       if (drtn)
       {
         w1 = uint8_t((val / (float)drtn) * (WID - 2));
@@ -1088,7 +1119,7 @@ void prgrssbar(uint32_t val, bool clr)
       {
         prgrsssprite.fillSprite(TFT_DARKGREY);
         prgrsssprite.fillRect(0, 0, w1, 9 - 2, TFT_BLUE);
-        prgrssbarflag = true; // vlajka pro display loop, aby se vykreslil volumebar
+        prgrssbarflag = true; // flag for the display loop to render the volumebar
         oldprgrssw = w1;
       }
     }
@@ -1125,11 +1156,19 @@ void sdp_icons()
 #if defined(SDCARD)
   if (pmode == PM_SDCARD)
   {
+    #if AUDIO_RUNTIME
+    if (audio->isRunning())
+    #else
     if (audio.isRunning())
+    #endif
     {
       drawIcon(PI_PLAY);
     }
+    #if AUDIO_RUNTIME
+    else if (audio->getAudioFileDuration() == 0) // stopped
+    #else
     else if (audio.getAudioFileDuration() == 0) // stopped
+    #endif
     {
       drawIcon(PI_STOP);
     }
@@ -1176,7 +1215,11 @@ void mute(bool source)
   if (muteflag)
   {
     setMutepin(1, false);
+    #if AUDIO_RUNTIME
+    audio->setVolume(0);
+    #else
     audio.setVolume(0);
+    #endif
 #if defined(DISP)
     dispmuteflag = 1;
 #endif
@@ -1188,7 +1231,11 @@ void mute(bool source)
   else
   {
     setMutepin(0, false);
+    #if AUDIO_RUNTIME
+    audio->setVolume(reqvol);
+    #else
     audio.setVolume(reqvol);
+    #endif
 #if defined(DISP)
     dispmuteflag = 0;
 #endif
@@ -1504,7 +1551,11 @@ void updateVolume(int8_t volstep)
   {
     reqvol += volstep;
   }
+  #if AUDIO_RUNTIME
+  audio->setVolume(reqvol);
+  #else
   audio.setVolume(reqvol);
+  #endif
 #if defined(DISP)
   volumebar(reqvol);
 #endif
@@ -1699,8 +1750,13 @@ void pausePlay()
     }
     else
     {
+      #if AUDIO_RUNTIME
+      audio->pauseResume();
+      if (audio->isRunning())
+      #else
       audio.pauseResume();
       if (audio.isRunning())
+      #endif
       {
         ESP_LOGW(TAG, "Audio RESUME");
 #if defined(DISP)
@@ -1717,7 +1773,11 @@ void pausePlay()
         setMutepin(1, true);
       }
     }
+    #if AUDIO_RUNTIME
+    uint32_t act = audio->getAudioCurrentTime();
+    #else
     uint32_t act = audio.getAudioCurrentTime();
+    #endif
     sendSDstat(act);
 #if defined(DISP)
     prgrssbar(act, false);
@@ -2240,17 +2300,30 @@ void audioTask(void *parameter)
 {
   while (true)
   {
+    #if AUDIO_RUNTIME
+    audio->loop(); // out radio stream
+    #else
     audio.loop(); // out radio stream
+    #endif
     if ((pmode == PM_RADIO) && (audpreset != reqpreset))
     {
       if (reqpreset == 255)
       {
+        #if AUDIO_RUNTIME
+        audio->stopSong();
+        bool conn = audio->connecttohost(testurl);
+        #else
         audio.stopSong();
         bool conn = audio.connecttohost(testurl);
+        #endif
         if (!conn)
         {
           vTaskDelay(1000 / portTICK_PERIOD_MS);
+          #if AUDIO_RUNTIME
+          conn = audio->connecttohost(testurl);
+          #else
           conn = audio.connecttohost(testurl);
+          #endif
         }
         reqpreset = 254;
         audpreset = 254;
@@ -2258,11 +2331,19 @@ void audioTask(void *parameter)
       else if (reqpreset <= presetnum)
       {
         testurlFlag = false;
+        #if AUDIO_RUNTIME
+        bool conn = audio->connecttohost(presets[reqpreset].url);
+        #else
         bool conn = audio.connecttohost(presets[reqpreset].url);
+        #endif
         if (!conn)
         {
           vTaskDelay(1000 / portTICK_PERIOD_MS);
+          #if AUDIO_RUNTIME
+          conn = audio->connecttohost(presets[reqpreset].url);
+          #else
           conn = audio.connecttohost(presets[reqpreset].url);
+          #endif
         }
         audpreset = reqpreset;
       }
@@ -2270,11 +2351,16 @@ void audioTask(void *parameter)
 #if defined(SDCARD)
     else if ((pmode == PM_SDCARD) && (SD_curindex != SD_oldindex))
     {
+      #if AUDIO_RUNTIME
+      audio->stopSong();
+      if (audio->connecttoFS(SD_MMC, SD_lastmp3spec, 0))
+      #else
       audio.stopSong();
-      if (audio.connecttoFS(SD_MMC, SD_lastmp3spec))
-      {
-        SD_oldindex = SD_curindex;
-      }
+      if (audio.connecttoFS(SD_MMC, SD_lastmp3spec, 0))
+      #endif
+        {
+          SD_oldindex = SD_curindex;
+        }
       sdp_icons_req = true;
     }
 #endif
@@ -2461,7 +2547,7 @@ void setup()
       "},"
       "\"hardware\":{"
 #if defined(DISP)
-      "\"dsptype\":0,"
+      "\"dsptype\":128,"
       "\"angle\":0,"
       "\"bckpin\":255,"
       "\"bckinv\":0,"
@@ -2533,6 +2619,7 @@ void setup()
       "\"seekstep\":30},"
       "\"default\":1"
       "}";
+  vTaskDelay(100 / portTICK_PERIOD_MS); //delay before PSRAM use
   maintask = xTaskGetCurrentTaskHandle(); // My taskhandle
   // DEBUG !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   // vTaskDelay(10000 / portTICK_PERIOD_MS); // Wait for PlatformIO monitor to start
@@ -2540,12 +2627,34 @@ void setup()
 
   Serial.begin(115200);
   ESP_LOGW(TAG, "Starting ...");
+
+  ESP_LOGW(TAG, "SketchSize:     0x%X", ESP.getSketchSize());
+  ESP_LOGW(TAG, "MaxSketchSpace: 0x%X", ESP.getFreeSketchSpace());
+  if (psramFound())
+  {
+    ESP_LOGW(TAG, "Total PSRAM:    0x%X", ESP.getPsramSize());
+    ESP_LOGW(TAG, "Free PSRAM:     0x%X", ESP.getFreePsram());
+  }
+  #if AUDIO_RUNTIME
+  audio = new Audio();
+  #endif
+  Audio::audio_info_callback = audio_info;
   presets = (PRESET *)ps_malloc(100 * sizeof(PRESET));
   wlans = (WLAN *)ps_malloc(8 * sizeof(WLAN));
   station = (char *)ps_malloc(BUFFLEN * sizeof(char));
   artist = (char *)ps_malloc(BUFFLEN * sizeof(char));
   title = (char *)ps_malloc(BUFFLEN * sizeof(char));
   testurl = (char *)ps_malloc(BUFFLEN * sizeof(char));
+
+  //init some values:
+  station[0] = '\0';
+  artist[0] = '\0';
+  title[0] = '\0';
+  cpycharar(presets[0].name, "", 1);
+  cpycharar(presets[0].url,  "", 1);
+  //
+
+
   RESERVEDGPIOS = (uint8_t *)ps_malloc(16 * sizeof(uint8_t));
   for (uint8_t i = 0; i < 16; i++)
   {
@@ -2585,6 +2694,17 @@ void setup()
   timer = timerBegin(100000);             // 100 kHz (period = 10 us)
   timerAttachInterrupt(timer, &timer100); // Call timer100() on timer alarm
   timerAlarm(timer, 10000, true, 0);      // 10000us * 10 = 100ms
+
+  if (psramFound())
+  {
+    ESP_LOGW(TAG, "Free PSRAM:     0x%X", ESP.getFreePsram());
+  }
+  #if AUDIO_RUNTIME
+  ESP_LOGW ( TAG, "Audio version:  %s", audio->getVersion());
+  #else
+  ESP_LOGW ( TAG, "Audio version:  %s", audio.getVersion());
+  #endif
+
   bool configured = false;
   if (!LittleFS.begin(FSIF)) // Mount and test LittleFS
   {
@@ -2737,12 +2857,19 @@ void setup()
       attachInterrupt(config->onoffipin, pw_OFF, CHANGE); // Interrupts will be handle by ON/OFF button
     }
 #endif
-    audio.setVolumeSteps(100);
-    audio.setVolume(reqvol);
     uint16_t timeout_ms = 1000;
     uint16_t timeout_ms_ssl = 3000;
+    #if AUDIO_RUNTIME
+    audio->setVolumeSteps(100);
+    audio->setVolume(reqvol);
+    audio->setConnectionTimeout(timeout_ms, timeout_ms_ssl);
+    audio->setTone(config->bass, config->mid, config->treble);
+    #else
+    audio.setVolumeSteps(100);
+    audio.setVolume(reqvol);
     audio.setConnectionTimeout(timeout_ms, timeout_ms_ssl);
     audio.setTone(config->bass, config->mid, config->treble);
+    #endif
     ESP_LOGW(TAG, "WiFi Radio mode");
     scanfinished = false;
     findWifi(false); // first call - no async !
@@ -2785,9 +2912,18 @@ void setup()
       ESP_LOGE(TAG, "Web interface incomplete!"); // No, show warning, upload data to FS
     }
 #endif // DATAWEB
+    #if AUDIO_RUNTIME
+    audio->settings.DMA_FRAME_NUM = 192;//for v3.4.6 !!!
+    #else
+    audio.settings.DMA_FRAME_NUM = 192;//for v3.4.6 !!!
+    #endif
     if (config->bclkpin != 255 && config->doutpin != 255 && config->wspin != 255)
     {
+      #if AUDIO_RUNTIME
+      audio->setPinout(config->bclkpin, config->wspin, config->doutpin);
+      #else
       audio.setPinout(config->bclkpin, config->wspin, config->doutpin);
+      #endif
     }
     if (config->defstat == 0)
     {
@@ -2834,13 +2970,9 @@ void setup()
         1,        // priority of the task
         &xsdtask, // Task handle to keep track of created task
         1);       // Run on CPU 1
-#endif
   }
+#endif
   setupWebServer();
-  ESP_LOGW(TAG, "SketchSize:     0x%X", ESP.getSketchSize());
-  ESP_LOGW(TAG, "MaxSketchSpace: 0x%X", ESP.getFreeSketchSpace());
-  ESP_LOGW(TAG, "Total PSRAM:    0x%X", ESP.getPsramSize());
-  ESP_LOGW(TAG, "Free PSRAM:     0x%X", ESP.getFreePsram());
 }
 
 void irloop()
@@ -2964,7 +3096,11 @@ void irloop()
           case IR_STOP:
             if (pmode == PM_SDCARD)
             {
+              #if AUDIO_RUNTIME
+              audio->stopSong();
+              #else
               audio.stopSong();
+              #endif
 #if defined(DISP)
               drawIcon(PI_STOP);
 #endif
@@ -2976,10 +3112,18 @@ void irloop()
             }
             break;
           case IR_FORW:
+            #if AUDIO_RUNTIME
+            audio->setTimeOffset(config->seekstep * 1);
+            #else
             audio.setTimeOffset(config->seekstep * 1);
+            #endif
             break;
           case IR_BACKW:
+            #if AUDIO_RUNTIME
+            audio->setTimeOffset(config->seekstep * -1);
+            #else
             audio.setTimeOffset(config->seekstep * -1);
+            #endif
             break;
           case IR_RNDM:
             Random();
@@ -2994,7 +3138,11 @@ void irloop()
           case IR_RADIO:
             if (pmode != PM_RADIO)
             {
+              #if AUDIO_RUNTIME
+              audio->stopSong();
+              #else
               audio.stopSong();
+              #endif
               pmode = PM_RADIO;
               setMutepin(0, true);
 #if defined(DISP)
@@ -3364,7 +3512,11 @@ void loop()
 #endif
           if (config->sdclock && pmode == PM_SDCARD)
           {
+            #if AUDIO_RUNTIME
+            uint32_t remtime = audio->getAudioFileDuration() - audio->getAudioCurrentTime();
+            #else
             uint32_t remtime = audio.getAudioFileDuration() - audio.getAudioCurrentTime();
+            #endif
             u8g2.setForegroundColor(TFT_YELLOW);
             secondsToHMS(remtime, timetxt2);
             drawStr(WID - 8 * 9, 21, timetxt2);
@@ -3402,6 +3554,7 @@ void loop()
             drawStr(0, 24, datetxt);
             u8g2.setFont(font);
             cw = u8g2.getUTF8Width(config->wdays[Weekday]);
+            u8g2.drawUTF8(0, 60, SPACES); //clear line
             u8g2.drawUTF8((WID - cw) / 2, 60, config->wdays[Weekday]);
           }
 #endif
@@ -3460,9 +3613,15 @@ void loop()
 #if defined(SDCARD)
     if (pmode == PM_SDCARD)
     {
+      #if AUDIO_RUNTIME
+      if (audio->isRunning())
+      {
+        uint32_t pstn = audio->getAudioCurrentTime();
+      #else
       if (audio.isRunning())
       {
         uint32_t pstn = audio.getAudioCurrentTime();
+      #endif
         if (pstn == pastpos)
         {
           if (poscounter++ == 8)
@@ -3549,14 +3708,23 @@ void loop()
     pwoff_req = false;
     fade_req = true;
     lastfade = millis();
+    #if AUDIO_RUNTIME
+    uint8_t vol100 = audio->getVolume();
+    audio->setVolumeSteps(100);
+    #else
     uint8_t vol100 = audio.getVolume();
-    audio.setVolumeSteps(64);
-    audio.setVolume(vol100 * 64 / 100);
+    audio.setVolumeSteps(100);
+    #endif
   }
   if (fade_req)
   {
+    #if AUDIO_RUNTIME
+    uint8_t fadevol = audio->getVolume();
+    if (audio->getVolume() == 0)
+    #else
     uint8_t fadevol = audio.getVolume();
     if (audio.getVolume() == 0)
+    #endif
     {
       digitalWrite(config->onoffopin, HIGH); // Power off !
     }
@@ -3582,7 +3750,11 @@ void loop()
         {
           fadevol -= 1;
         }
+        #if AUDIO_RUNTIME
+        audio->setVolume(fadevol);
+        #else
         audio.setVolume(fadevol);
+        #endif
         if (fadevol == 0)
         {
           digitalWrite(config->onoffopin, HIGH); // Power off !
@@ -3704,7 +3876,11 @@ void loop()
     drawIcon(PI_SDCARD);
     oldprgrssw = -1;
 #endif
+    #if AUDIO_RUNTIME
+    audio->stopSong();
+    #else
     audio.stopSong();
+    #endif
 #if defined(DISP)
     clearLines();
 #endif
@@ -3735,9 +3911,6 @@ void WiFiEvent(WiFiEvent_t event, arduino_event_info_t info)
       nets = WiFi.scanComplete();
       sendScanResult(nets, NULL);
     }
-    // else                  // scanmode == 0 ... setup() request
-    //{
-    // }
     break;
 
   case ARDUINO_EVENT_WIFI_STA_CONNECTED:

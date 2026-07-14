@@ -98,7 +98,7 @@
         <span id="volume1" class="col-xs-1" style="align:right;">50
         </span>
     </div> 
-    <div class="row form-group" style="margin-top: 30px;" id="prgrss" style="visible:block;">
+    <div class="row form-group" style="margin-top: 30px;visible:block;" id="prgrss">
         <label class="col-xs-2">Position<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign"
                 aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right"
                 data-content="Adjusting the playback position"></i></label>
@@ -783,7 +783,7 @@
 </div>
 <div id="hardwarecontent">
     <legend>Hardware Settings</legend>
-    <div id="dspdiv1"style="display:none">
+    <div id="dspdiv1" style="display:none">
     <div class="row form-group">
         <label class="col-xs-3">Display rotation angle<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign"
                 aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right"
@@ -1591,6 +1591,16 @@ It is recommended to press the button several times and check whether the code d
                         <td>
                             <div class='progress' style="margin-bottom: 0 !important;">
                                 <div id="spiffs" class="progress-bar progress-bar-primary" role="progressbar">
+                                    Progress
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                      <th>Free PSRAM</th>
+                        <td>
+                            <div class='progress' style="margin-bottom: 0 !important;">
+                                <div id="psram" class="progress-bar progress-bar-primary" role="progressbar">
                                     Progress
                                 </div>
                             </div>

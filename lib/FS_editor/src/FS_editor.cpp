@@ -1,7 +1,6 @@
 #include "FS_editor.h"
 #include <FS.h>
 
-//File: edit.htm.gz, Size: 4151
 #define edit_htm_gz_len 4117
 const uint8_t edit_htm_gz[] PROGMEM = {
  0x1F,0x8B,0x08,0x08,0x96,0x3F,0x11,0x65,0x04,0x00,0x65,0x64,0x69,0x74,0x2E,0x68,0x74,0x6D,0x00,
@@ -279,7 +278,6 @@ static void loadExcludeList(fs::FS &_fs, const char *filename){
     static char linebuf[SPIFFS_MAXLENGTH_FILEPATH];
     fs::File excludeFile=_fs.open(filename, "r");
     if(!excludeFile){
-        //addExclude("/*.js.gz");
         return;
     }
 #ifdef ESP32
@@ -332,7 +330,6 @@ static bool isExcluded(fs::FS &_fs, const char *filename) {
 }
 
 // WEB HANDLER IMPLEMENTATION
-
 #ifdef ESP32
 FS_editor::FS_editor(const fs::FS& fs, const String& username, const String& password)
 #else
@@ -345,54 +342,24 @@ FS_editor::FS_editor(const String& username, const String& password, const fs::F
 ,_startTime(0)
 {}
 
-bool FS_editor::canHandle(AsyncWebServerRequest *request){
+bool FS_editor::canHandle(AsyncWebServerRequest *request) const {
   if(request->url().equalsIgnoreCase("/edit")){
-    if(request->method() == HTTP_GET){
-      if(request->hasParam("list"))
-        return true;
-      if(request->hasParam("edit")){
-        request->_tempFile = _fs.open(request->arg("edit"), "r");
-        if(!request->_tempFile){
-          return false;
-        }
-#ifdef ESP32
-        if(request->_tempFile.isDirectory()){
-          request->_tempFile.close();
-          return false;
-        }
-#endif
-      }
-      if(request->hasParam("download")){
-        request->_tempFile = _fs.open(request->arg("download"), "r");
-        if(!request->_tempFile){
-          return false;
-        }
-#ifdef ESP32
-        if(request->_tempFile.isDirectory()){
-          request->_tempFile.close();
-          return false;
-        }
-#endif
-      }
-      request->addInterestingHeader("If-Modified-Since");
-      return true;
+    if(request->method() == HTTP_GET || request->method() == HTTP_POST || 
+       request->method() == HTTP_DELETE || request->method() == HTTP_PUT)
+    {
+      return true; 
     }
-    else if(request->method() == HTTP_POST)
-      return true;
-    else if(request->method() == HTTP_DELETE)
-      return true;
-    else if(request->method() == HTTP_PUT)
-      return true;
-
   }
   return false;
 }
 
 
-void FS_editor::handleRequest(AsyncWebServerRequest *request){
+void FS_editor::handleRequest(AsyncWebServerRequest *request)
+{
   if(_username.length() && _password.length() && !request->authenticate(_username.c_str(), _password.c_str()))
-    return request->requestAuthentication();
-
+    {
+      return request->requestAuthentication();
+    }
   if(request->method() == HTTP_GET){
     if(request->hasParam("list")){
       String path = request->getParam("list")->value();
@@ -420,7 +387,6 @@ void FS_editor::handleRequest(AsyncWebServerRequest *request){
         output += "{\"type\":\"";
         output += "file";
         output += "\",\"name\":\"";
-//        output += String(entry.name());
 #ifdef ESP32
         output += String(entry.path());
 #else
@@ -442,15 +408,24 @@ void FS_editor::handleRequest(AsyncWebServerRequest *request){
       request->send(200, "application/json", output);
       output = String();
     }
+    
     else if(request->hasParam("edit") || request->hasParam("download")){
-      request->send(request->_tempFile, request->_tempFile.name(), String(), request->hasParam("download"));
+      String filename = request->hasParam("download") ? request->getParam("download")->value() : request->getParam("edit")->value();
+      fs::File file = _fs.open(filename, "r");
+      
+      if (file && !file.isDirectory()) {
+        request->send(file, file.path(), String(), request->hasParam("download"));
+      } else {
+        request->send(404, "text/plain", "Soubor nenalezen");
+      }
     }
+    
     else {
       const char * buildTime = __DATE__ " " __TIME__ " GMT";
       if (request->header("If-Modified-Since").equals(buildTime)) {
         request->send(304);
       } else {
-        AsyncWebServerResponse *response = request->beginResponse_P(200, "text/html", edit_htm_gz, edit_htm_gz_len);
+        AsyncWebServerResponse *response = request->beginResponse(200, "text/html", edit_htm_gz, edit_htm_gz_len);
         response->addHeader("Content-Encoding", "gzip");
         response->addHeader("Last-Modified", buildTime);
         request->send(response);
@@ -487,7 +462,8 @@ void FS_editor::handleRequest(AsyncWebServerRequest *request){
   }
 }
 
-void FS_editor::handleUpload(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final){
+void FS_editor::handleUpload(AsyncWebServerRequest *request, const String& filename, size_t index, uint8_t *data, size_t len, bool final)
+{
   if(!index){
     if(!_username.length() || request->authenticate(_username.c_str(),_password.c_str())){
       _authenticated = true;

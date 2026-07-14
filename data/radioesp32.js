@@ -106,7 +106,7 @@ function toHHMMSS(secs)
 function handleProgress(val, source = 0)
 {
   $('#progress').val(val);
-  var pos = parseInt(duration*(val/1000));
+  var pos = parseInt(val*(duration/1000));
   $('#progress1').html(toHHMMSS(pos));
   if (source===1)
   {sendMessage("{\"command\":\"position\",\"position\":"+pos+"}");}
@@ -342,7 +342,7 @@ function listhardware() {
     $("#dspdiv1").css('display','block');
     $("#dspdiv2").css('display','block');
     handleDsptype(config.hardware.dsptype);
-    $("select[name=dsptype]").prop('disabled', true);
+    //$("select[name=dsptype]").prop('disabled', true);
 	  $('#bckinv'+config.hardware.bckinv.toString()).prop('checked', true);
 	  $('#angle'+config.hardware.angle.toString()).prop('checked', true);
     var bckpin = $('#bckpin');
@@ -353,7 +353,7 @@ function listhardware() {
   {
     $("#dspdiv1").css('display','none');
     $("#dspdiv2").css('display','none');
-	  $("select[name=dsptype]").val(config.hardware.dsptype).change();
+	  //$("select[name=dsptype]").val(config.hardware.dsptype).change();
   }
   if (SDCARD)
   {
@@ -406,12 +406,12 @@ function listhardware() {
   var mutesel = $('#mutepin');
 	createOptions(mutesel, false);
 	mutesel.val(config.hardware.mutepin);
-  var spicssel = $('#spicspin');
-	createOptions(spicssel, false);
-	spicssel.val(config.hardware.spicspin);
-  var spidcsel = $('#spidcpin');
-	createOptions(spidcsel, false);
-	spidcsel.val(config.hardware.spidcpin);
+  //var spicssel = $('#spicspin');
+	//createOptions(spicssel, false);
+	//spicssel.val(config.hardware.spicspin);
+  //var spidcsel = $('#spidcpin');
+	//createOptions(spidcsel, false);
+	//spidcsel.val(config.hardware.spidcpin);
 }
 
 function savehardware() {
@@ -420,7 +420,7 @@ function savehardware() {
   {
   config.hardware.bckinv = parseInt(	$(':radio[name="bckinv"]:checked').val());
   config.hardware.angle = parseInt(	$(':radio[name="angle"]:checked').val());
-  config.hardware.dsptype = parseInt(	$('#dsptype').val());
+  //config.hardware.dsptype = parseInt(	$('#dsptype').val());
   config.hardware.bckpin = parseInt($("#bckpin").val());
   }
   if (SDCARD)
@@ -1828,7 +1828,10 @@ async function listStats() {
 	colorStatusbar(document.getElementById("flash"));
 	document.getElementById("spiffs").innerHTML = ajaxobj.availspiffs + " Bytes";
 	document.getElementById("spiffs").style.width = (ajaxobj.availspiffs * 100) / ajaxobj.spiffssize + "%";
-	colorStatusbar(document.getElementById("spiffs"));
+	colorStatusbar(document.getElementById("psram"));
+	document.getElementById("psram").innerHTML = ajaxobj.availpsram + " Bytes";
+	document.getElementById("psram").style.width = (ajaxobj.availpsram * 100) / ajaxobj.psramsize + "%";
+	colorStatusbar(document.getElementById("psram"));
 	if (BATTERY)
 	{
 	$("#batprogress").css('display','table-row');
@@ -1959,7 +1962,7 @@ function socketMessageListener(evt) {
     try {
         obj = JSON.parse(evt.data);
     } catch (e) {
-      console.log("No JSON: ",evt.data)
+      console.log("No JSON: ",evt.data);
         return; // error in the above string (in this case, yes)!
     }
 	if (obj.hasOwnProperty("command")) {

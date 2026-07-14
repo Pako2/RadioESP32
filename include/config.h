@@ -1,6 +1,7 @@
 struct Config {
 	bool default_ = 1;
-	uint8_t defvol = 16;
+//	uint8_t defvol = 16;
+	uint8_t defvol = 50;
 	int8_t bass = 0;
 	int8_t mid = 0;
 	int8_t treble = 0;
@@ -32,7 +33,7 @@ struct Config {
 	uint8_t doutpin = 255;
 	uint8_t wspin = 255;
 #if defined(DISP)
-	uint8_t dsptype = 0;
+	uint8_t dsptype = 128;
 	uint8_t angle = 0;
 	uint8_t bckpin = 255;
 	uint8_t bckinv = 0;

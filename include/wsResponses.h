@@ -1,4 +1,59 @@
 const char *WSRTAG = "wsResponses"; // For debug lines
+
+void sendJsonToClient(AsyncWebSocketClient *cl, JsonDocument &root)
+{
+    if (cl != nullptr && cl->status() == WS_CONNECTED)
+    {
+        size_t len = 0;
+        len = measureJson(root);
+        
+        if (len > 0)
+        {
+            char* jsonBuffer = (char*)heap_caps_malloc(len + 1, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+            if (jsonBuffer != nullptr)
+            {
+                serializeJson(root, jsonBuffer, len + 1);
+                
+                AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer((uint8_t*)jsonBuffer, len);
+                if (buffer)
+                {
+                    cl->text(buffer);
+                }
+                heap_caps_free(jsonBuffer);
+            }
+        }
+    }
+}
+
+void sendJsonToAll(JsonDocument &root, bool logmssg = false)
+{
+    if (weso.count() > 0)
+    {
+        size_t len = 0;
+        len = measureJson(root);
+        
+        if (len > 0)
+        {
+            char* jsonBuffer = (char*)heap_caps_malloc(len + 1, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+            if (jsonBuffer != nullptr)
+            {
+                serializeJson(root, jsonBuffer, len + 1);
+                
+                AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer((uint8_t*)jsonBuffer, len);
+                if (buffer)
+                {
+                    weso.textAll(buffer);
+					if (logmssg)
+					{
+						ESP_LOGW(WSRTAG, "Heartbeat message sent !");
+					}
+                }
+                heap_caps_free(jsonBuffer);
+            }
+        }
+    }
+}
+
 struct deviceUptime
 {
 	uint32_t weeks;
@@ -41,26 +96,19 @@ void IPtoChars(IPAddress adress, char *ipadress)
 
 void sendHeartBeat()
 {
+
 	JsonDocument root;
 	root["command"] = "heartbeat";
 	root["messageid"] = ++messageid;
-	size_t len = 0;
-	len = measureJson(root);
-	if (len)
+    if (weso.count() > 0)
 	{
-		AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer(len);
-		if (buffer && weso.count() > 0)
-		{
-			serializeJson(root, (char *)buffer->get(), len + 1);
-			weso.textAll(buffer);
-			ESP_LOGW(WSRTAG, "Heartbeat message sent !");
-		}
+        sendJsonToAll(root, true);
 	}
 }
 
 void sendStatus(AsyncWebSocketClient *cl)
 {
-	if (weso.count() > 0)
+	if (cl != NULL)
 	{
 		char ip1[16] = "0.0.0.0";
 		char ip2[16] = "0.0.0.0";
@@ -71,6 +119,8 @@ void sendStatus(AsyncWebSocketClient *cl)
 		char dus[64];
 		unsigned int totalBytes = LittleFS.totalBytes();
 		unsigned int usedBytes = LittleFS.usedBytes();
+		uint32_t totalPsram = ESP.getPsramSize();
+		uint32_t freePsram = ESP.getFreePsram();
 		if (totalBytes <= 0)
 		{
 			ESP_LOGE(WSRTAG, "Error getting info on LittleFS");
@@ -79,8 +129,8 @@ void sendStatus(AsyncWebSocketClient *cl)
 		root["command"] = "status";
 		root["heap"] = ESP.getFreeHeap();
 		root["totalheap"] = ESP.getHeapSize();
-		ESP_LOGW(WSRTAG, "Total PSRAM: %d", ESP.getPsramSize());
-		ESP_LOGW(WSRTAG, "Free PSRAM: %d", ESP.getFreePsram());
+		ESP_LOGW(WSRTAG, "Total PSRAM: %d", totalPsram);
+		ESP_LOGW(WSRTAG, "Free PSRAM: %d", freePsram);
 		root["psram"] = ESP.getFreePsram();
 		root["totalpsram"] = ESP.getPsramSize();
 		uint64_t chipid = ESP.getEfuseMac();
@@ -94,6 +144,8 @@ void sendStatus(AsyncWebSocketClient *cl)
 		root["partsize"] = ESP.getFreeSketchSpace(); // esp library bug !
 		root["availspiffs"] = totalBytes - usedBytes;
 		root["spiffssize"] = totalBytes;
+		root["psramsize"] = totalPsram;
+		root["availpsram"] = freePsram;
 		getDeviceUptimeString(dus);
 		root["uptime"] = dus;
 		int ss1 = uxTaskGetStackHighWaterMark(maintask);
@@ -130,18 +182,8 @@ void sendStatus(AsyncWebSocketClient *cl)
 		adcval_ = (adcval_ < config->bat100) ? adcval_ : config->bat100;
         root["battery"] = (uint8_t)(0.5 + (100 * (float)(adcval_ - config->bat0)/ config->batw));
 
-		#endif
-		size_t len = 0;
-		len = measureJson(root);
-		if (len)
-		{
-			AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer(len);
-			if (buffer && weso.count() > 0)
-			{
-				serializeJson(root, (char *)buffer->get(), len + 1);
-				cl->text(buffer);
-			}
-		}
+#endif
+       sendJsonToClient(cl, root);
 	}
 }
 
@@ -163,18 +205,12 @@ void sendRadio()
 		root["title"] = title;
 		root["mute"] = muteflag;
 		root["volume"] = reqvol;
+		#if AUDIO_RUNTIME
+		root["running"] = audio->isRunning();
+		#else
 		root["running"] = audio.isRunning();
-		size_t len = 0;
-		len = measureJson(root);
-		if (len)
-		{
-			AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer(len);
-			if (buffer && weso.count() > 0)
-			{
-				serializeJson(root, (char *)buffer->get(), len + 1);
-				weso.textAll(buffer);
-			}
-		}
+		#endif
+		sendJsonToAll(root);
 	}
 }
 
@@ -185,17 +221,7 @@ void sendMute(bool val)
 		JsonDocument root;
 		root["command"] = "mute";
 		root["mute"] = val;
-		size_t len = len;
-		len = measureJson(root);
-		if (len)
-		{
-			AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer(len);
-			if (buffer && weso.count() > 0)
-			{
-				serializeJson(root, (char *)buffer->get(), len + 1);
-				weso.textAll(buffer);
-			}
-		}
+		sendJsonToAll(root);
 	}
 }
 
@@ -207,16 +233,7 @@ void sendIRcode(uint32_t val)
 		root["command"] = "ircode";
 		root["ircode"] = val;
 		size_t len = 0;
-		len = measureJson(root);
-		if (len)
-		{
-			AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer(len);
-			if (buffer && weso.count() > 0)
-			{
-				serializeJson(root, (char *)buffer->get(), len + 1);
-				weso.textAll(buffer);
-			}
-		}
+		sendJsonToAll(root);
 	}
 }
 
@@ -227,17 +244,7 @@ void sendVolume(uint8_t val)
 		JsonDocument root;
 		root["command"] = "volume";
 		root["volume"] = val;
-		size_t len = 0;
-		len = measureJson(root);
-		if (len)
-		{
-			AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer(len);
-			if (buffer && weso.count() > 0)
-			{
-				serializeJson(root, (char *)buffer->get(), len + 1);
-				weso.textAll(buffer);
-			}
-		}
+		sendJsonToAll(root);
 	}
 }
 
@@ -275,32 +282,23 @@ void sendScanResult(int networksFound, AsyncWebSocketClient *cl)
 			item["channel"] = WiFi.channel(indices[i]);
 			item["enctype"] = WiFi.encryptionType(indices[i]);
 		}
-		size_t len = 0;
-		len = measureJson(root);
-		if (len)
+		if (weso.count() > 0)
 		{
-			AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer(len); //  creates a buffer (len + 1) for you.
-			if (buffer && weso.count() > 0)
+			if (cl == NULL)
 			{
-				JsonObject documentRoot = root["list"].as<JsonObject>();
-				serializeJson(root, (char *)buffer->get(), len + 1);
-				if (cl == NULL)
-				{
-					weso.textAll(buffer);
-				}
-				else
-				{
-					cl->text(buffer);
-				}
+				sendJsonToAll(root);
 			}
-			WiFi.scanDelete();
+			else
+			{
+				sendJsonToClient(cl, root);
+			}
 		}
 	}
 }
 
 void sendWebConfig(AsyncWebSocketClient *cl)
 {
-	if (weso.count() > 0)
+	if (cl != NULL)
 	{
 		char cmdbuffer[32];
 		JsonDocument root;
@@ -356,17 +354,8 @@ void sendWebConfig(AsyncWebSocketClient *cl)
 				break;
 			}
 		}
-		size_t len = 0;
-		len = measureJson(root);
-		if (len)
-		{
-			AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer(len); //  creates a buffer (len + 1) for you.
-			if (buffer && weso.count() > 0)
-			{
-				serializeJson(root, (char *)buffer->get(), len + 1);
-				cl->text(buffer);
-			}
-		}
+
+		sendJsonToClient(cl, root);
 	}
 }
 
@@ -409,45 +398,25 @@ int getTZoffset(time_t tt)
 
 void sendTime(AsyncWebSocketClient *cl)
 {
-	if (weso.count() > 0)
+	if (cl != NULL)
 	{
 		time_t now_ = time(nullptr);
 		JsonDocument root;
 		root["command"] = "gettime";
 		root["epoch"] = (long long int)now_;
 		root["tzoffset"] = getTZoffset(now_);
-		size_t len = 0;
-		len = measureJson(root);
-		if (len)
-		{
-			AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer(len);
-			if (buffer && weso.count() > 0)
-			{
-				serializeJson(root, (char *)buffer->get(), len + 1);
-				cl->text(buffer);
-			}
-		}
+		sendJsonToClient(cl, root);
 	}
 }
 
 void  sendLoginpassw(AsyncWebSocketClient *cl, bool valid)
 {
-	if (weso.count() > 0)
+	if (cl != NULL)
 	{
 		JsonDocument root;
 		root["command"] = "loginpassw";
 		root["valid"] = valid;
-		size_t len = 0;
-		len = measureJson(root);
-		if (len)
-		{
-			AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer(len);
-			if (buffer && weso.count() > 0)
-			{
-				serializeJson(root, (char *)buffer->get(), len + 1);
-				cl->text(buffer);
-			}
-		}
+		sendJsonToClient(cl, root);
 	}
 }
 
@@ -491,18 +460,12 @@ void sendSDplayer(uint8_t kind)
 		root["sdready"] = SD_okay;
 		root["count"] = SD_filecount;
 		root["index"] = SD_curindex;
+		#if AUDIO_RUNTIME
+		root["running"] = audio->isRunning();
+		#else
 		root["running"] = audio.isRunning();
-		size_t len = 0;
-		len = measureJson(root);
-		if (len)
-		{
-			AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer(len);
-			if (buffer && weso.count() > 0)
-			{
-				serializeJson(root, (char *)buffer->get(), len + 1);
-				weso.textAll(buffer);
-			}
-		}
+		#endif
+		sendJsonToAll(root);
 	}
 }
 
@@ -516,17 +479,7 @@ void sendSDtrack(int ix, char *fnm)
 		root["index"] = ix;
 		root["sdready"] = SD_okay;
 		root["count"] = SD_filecount;
-		size_t len = 0;
-		len = measureJson(root);
-		if (len)
-		{
-			AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer(len);
-			if (buffer && weso.count() > 0)
-			{
-				serializeJson(root, (char *)buffer->get(), len + 1);
-				weso.textAll(buffer);
-			}
-		}
+		sendJsonToAll(root);
 	}
 }
 
@@ -538,17 +491,7 @@ void sendRndLoop()
 		root["command"] = "rndloop";
 		root["random"] = random_;
 		root["loop"] = loop_;
-		size_t len = len;
-		len = measureJson(root);
-		if (len)
-		{
-			AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer(len);
-			if (buffer && weso.count() > 0)
-			{
-				serializeJson(root, (char *)buffer->get(), len + 1);
-				weso.textAll(buffer);
-			}
-		}
+		sendJsonToAll(root);
 	}
 }
 
@@ -560,37 +503,31 @@ void sendSDready()
 		root["command"] = "sdready";
 		root["sdready"] = SD_okay;
 		root["count"] = SD_filecount;
-		size_t len = 0;
-		len = measureJson(root);
-		if (len)
-		{
-			AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer(len);
-			if (buffer && weso.count() > 0)
-			{
-				serializeJson(root, (char *)buffer->get(), len + 1);
-				weso.textAll(buffer);
-			}
-		}
+		sendJsonToAll(root);
 	}
 }
 
 void sendSDstat(uint32_t pstn)
 {
+	if (weso.count() > 0)
+	{
 	JsonDocument root;
 	root["command"] = "sdstatus";
+	#if AUDIO_RUNTIME
+	root["running"] = audio->isRunning();
+	root["duration"] = audio->getAudioFileDuration();
+	#else
 	root["running"] = audio.isRunning();
 	root["duration"] = audio.getAudioFileDuration();
+	#endif
 	root["position"] = pstn;
-	size_t len = 0;
-	len = measureJson(root);
-	if (len)
-	{
-		AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer(len);
-		if (buffer && weso.count() > 0)
-		{
-			serializeJson(root, (char *)buffer->get(), len + 1);
-			weso.textAll(buffer);
-		}
+	if (weso.count() > 0)
+	  {
+#if defined(DEBUG)
+  		serializeJson(root, Serial); //print to serial
+#endif
+	    sendJsonToAll(root);
+	  }
 	}
 }
 #endif
@@ -604,17 +541,7 @@ void sendadcbat(const char *val)
 		root["command"] = "adcbat";
 		root["kind"] = val;
 		root["val"] = adcval;
-		size_t len = 0;
-		len = measureJson(root);
-		if (len)
-		{
-			AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer(len);
-			if (buffer && weso.count() > 0)
-			{
-				serializeJson(root, (char *)buffer->get(), len + 1);
-				weso.textAll(buffer);
-			}
-		}
+		sendJsonToAll(root);
 	}
 }
 #endif
@@ -628,24 +555,18 @@ void sendAsd(AsyncWebSocketClient *cl)
 		root["command"] = "asd";
 		root["pwoffminutes"] = pwoffminutes;
 		root["pwofftime"] = pwofftime;
-		size_t len = 0;
-		len = measureJson(root);
-		if (len)
+		if (weso.count() > 0)
 		{
-			AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer(len);
-			if (buffer && weso.count() > 0)
+			if (cl == NULL)
 			{
-				serializeJson(root, (char *)buffer->get(), len + 1);
-				if (cl == NULL)
-				{
-					weso.textAll(buffer);
-				}
-				else
-				{
-					cl->text(buffer);
-				}
+				sendJsonToAll(root);
+			}
+			else
+			{
+                sendJsonToClient(cl, root);
 			}
 		}
+
 	}
 }
 #endif

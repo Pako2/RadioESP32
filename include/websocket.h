@@ -59,7 +59,11 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
   {
     if (pmode != PM_RADIO)
     {
+      #if AUDIO_RUNTIME
+      audio->stopSong();
+      #else
       audio.stopSong();
+      #endif
       pmode = PM_RADIO;
       setMutepin(0, true);
 #if defined(DISP)
@@ -95,7 +99,11 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
   else if (strcmp(command, "volume") == 0)
   {
     reqvol = root["volume"];
+    #if AUDIO_RUNTIME
+    audio->setVolume(reqvol);
+    #else
     audio.setVolume(reqvol);
+    #endif
 #if defined(DISP)
     changeDispMode(DSP_RADIO);
     volumebar(reqvol);
@@ -137,7 +145,11 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
   else if (strcmp(command, "treble") == 0)
   {
     int8_t treble = root["treble"];
+    #if AUDIO_RUNTIME
+    audio->setTone(0, 0, treble);
+    #else
     audio.setTone(0, 0, treble);
+    #endif
   }
   else if (strcmp(command, "mute") == 0)
   {
@@ -172,7 +184,20 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
     if (configFile)
     {
       size_t len = configFile.size();
-      AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer(len); //  creates a buffer (len + 1) for you.
+/*
+            char* jsonBuffer = (char*)heap_caps_malloc(len + 1, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+            if (jsonBuffer != nullptr)
+            {     
+                AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer((uint8_t*)jsonBuffer, len);
+                if (buffer)
+                {
+                    configFile.readBytes((char *)buffer->get(), len + 1);
+                    client->text(buffer);
+                }
+                heap_caps_free(jsonBuffer);
+            }
+*/
+      AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer(len);
       if (buffer)
       {
         configFile.readBytes((char *)buffer->get(), len + 1);
@@ -230,7 +255,11 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
     changeDispMode(DSP_RADIO);
 #endif
     int8_t val = root["val"];
+    #if AUDIO_RUNTIME
+    audio->setTimeOffset(config->seekstep * val);
+    #else
     audio.setTimeOffset(config->seekstep * val);
+    #endif
   }
   else if (strcmp(command, "playpause") == 0)
   {
@@ -258,15 +287,23 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
 #if defined(DISP)
     changeDispMode(DSP_RADIO);
 #endif
-    int32_t pos = root["position"];
-    audio.setAudioPlayPosition(pos);
+    uint32_t pos = root["position"].as<uint32_t>();
+    #if AUDIO_RUNTIME
+    audio->setAudioPlayTime(pos);
+    #else
+    audio.setAudioPlayTime(pos);
+    #endif
   }
   else if (strcmp(command, "stop") == 0)
   {
 #if defined(DISP)
     changeDispMode(DSP_RADIO);
 #endif
+    #if AUDIO_RUNTIME
+    audio->stopSong();
+    #else
     audio.stopSong();
+    #endif
 #if defined(DISP)
     drawIcon(PI_STOP);
 #endif
@@ -323,11 +360,7 @@ void onWsEvent(AsyncWebSocket *server_, AsyncWebSocketClient *client, AwsEventTy
     if (info->final && info->index == 0 && infolen == len)
     {
 // the whole message is in a single frame and we got all of it's data
-#if defined(BOARD_HAS_PSRAM)
       client->_tempObject = ps_malloc(len);
-#else
-      client->_tempObject = malloc(len);
-#endif
       if (client->_tempObject != NULL)
       {
         memcpy((uint8_t *)(client->_tempObject), data, len);
@@ -341,11 +374,7 @@ void onWsEvent(AsyncWebSocket *server_, AsyncWebSocketClient *client, AwsEventTy
       {
         if (info->num == 0 && client->_tempObject == NULL)
         {
-#if defined(BOARD_HAS_PSRAM)
           client->_tempObject = ps_malloc(infolen);
-#else
-          client->_tempObject = malloc(infolen);
-#endif
         }
       }
       if (client->_tempObject != NULL)
