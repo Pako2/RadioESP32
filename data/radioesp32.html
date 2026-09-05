@@ -29,6 +29,7 @@
     <br>
     <br>
 </div>
+
 <div id="progresscontent">
     <br>
     <br>
@@ -53,6 +54,8 @@
         </div>
     </div>
 </div>
+
+
 
 <div id="controlcontent">
     <legend id="comm1">Radio Control</legend>
@@ -349,6 +352,66 @@
 <br><br>
 </div>
 
+<div id="btcontent">
+    <div class="row form-group" style="margin-bottom: -15px;margin-top: -10px;">
+    <legend  class="col-xs-9 col-md-8">Bluetooth Settings
+    </legend>
+    </div>
+    <br>
+    <div class="row form-group">
+        <label class="col-xs-3">Name<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign"
+                aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right"
+                data-content="The name by which the Bluetooth speaker is presented"></i></label>
+        <span class="col-xs-7">
+            <input class="form-control input-sm" placeholder="BT Loadspeaker Name" value="RadioESP32" id="btname" type="text">
+        </span>
+        <br>
+    </div>
+    <div class="row form-group">
+        <label class="col-xs-3">Auto reconnect<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign"
+                aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right"
+                data-content="Turns automatic reconnection true or false."></i></label>
+    <div class="col-xs-9">
+            <span>
+                <label class="radio-inline">
+                    <input type="radio" value="1" name="btauto" id="btauto1"  onclick="handleAutorec(1)" checked>Yes</label>
+                <label class="radio-inline">
+                    <input type="radio" value="0" name="btauto" id="btauto0"  onclick="handleAutorec(0)">No</label>
+            </span>
+        </div>
+    </div>
+    <div class="row form-group" id="attemptscount" style="visible:block;">
+        <label class="col-xs-3">Number of attempts<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign"
+                aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right"
+                data-content="Maximum number of connection attempts."></i></label>
+        <span class="col-xs-7">
+            <input class="form-control input-sm" placeholder="Number of attempts" value="16" id="btcount" type="number" min="1" max="1000">
+        </span>
+        <br>
+    </div>
+    <div class="row form-group">
+        <label class="col-xs-3">Default encoder button action<i style="margin-left: 10px;" class="glyphicon glyphicon-info-sign"
+                aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right"
+                data-content="Specifies the default function of the encoder button. An unselected function will be available after double-clicking."></i></label>
+    <div class="col-xs-9">
+            <span>
+                <label class="radio-inline">
+                    <input type="radio" value="1" name="btaction" id="btaction1" checked>Pause/Play</label>
+                <label class="radio-inline">
+                    <input type="radio" value="0" name="btaction" id="btaction0">Mute ON/OFF</label>
+            </span>
+        </div>
+    </div>
+<div class="row">
+    <span class="col-xs-10">
+        <span class="pull-right">
+            <button onclick="savebt()" class="btn btn-primary btn-sm">Save</button>
+        </span>
+    </span>
+</div>
+<br><br>
+</div>
+
 <div id="networkcontent">
     <div class="row form-group" style="margin-bottom: -15px;margin-top: -10px;">
     <legend  class="col-xs-9 col-md-8">Network Settings
@@ -530,7 +593,7 @@
                 aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right"
                 data-content="Set the ADC value corresponding to the battery voltage at 0% charge."></i></label>
         <span class="col-xs-3">
-            <input class="form-control input-sm" placeholder="Battery 0 %" value="bat0" id="bat0" type="number" min="0" max="4095">
+            <input class="form-control input-sm" placeholder="Battery 0 %" value=0 id="bat0" type="number" min="0" max="4095">
         </span>
         <span class="col-xs-3">
           <span class="pull-left">
@@ -544,7 +607,7 @@
                 aria-hidden="true" data-toggle="popover" data-trigger="hover" data-placement="right"
                 data-content="Set the ADC value corresponding to the battery voltage at 100% charge."></i></label>
         <span class="col-xs-3">
-            <input class="form-control input-sm" placeholder="Battery 100 %" value="bat100" id="bat100" type="number" min="0" max="4095">
+            <input class="form-control input-sm" placeholder="Battery 100 %" value=4095 id="bat100" type="number" min="0" max="4095">
         </span>
         <span class="col-xs-3">
           <span class="pull-left">
@@ -1652,5 +1715,64 @@ It is recommended to press the button several times and check whether the code d
         <br>
     </div>
 </div>
+<div id="updatecontent">
+<div class="container-fluid" style="margin-top: -45px;">
+  <div class="row">
+    <div class="col-md-12">
+      <h3 class="page-header">Check for updates</h3>
+      <div class="table-responsive"  style="margin-top: -20px;">
+        <table class="table table-striped table-bordered table-hover">
+          <thead>
+            <tr class="active">
+              <th class="col-xs-3">Application</th>
+              <th class="col-xs-2 text-center">Current version</th>
+              <th class="col-xs-2 text-center">Available version</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <tr>
+              <td><strong>Internet Radio</strong></td>
+              <td id="radio-current" class="text-center">v0.0.0</td>
+              <td id="radio-github" class="text-center"><span class="text-muted">Loading...</span></td>
+            </tr>
+
+            <tr>
+              <td><strong>Bluetooth Loadspeaker</strong></td>
+              <td id="bt-current" class="text-center">v0.0.0</td>
+              <td id="bt-github" class="text-center"><span class="text-muted">Loading...</span></td>
+            </tr>
+            <tr>
+              <td><strong>Update Manager</strong></td>
+              <td id="upman-current" class="text-center">v0.0.0</td>
+              <td id="upman-github" class="text-center"><span class="text-muted">Loading...</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-12">
+        <button onclick="jumptoupman()" class="btn btn-primary btn-sm pull-right">Jump to Update Manager</button>
+    </div>
+  </div>
+ </div>
+</div>
+<div id="jump0content">
+          <div style="text-align:center; margin-top:20%; font-family:sans-serif;">
+            <h1 style="color:#d9534f;">Booting into Update Manager Mode...</h1>
+            <p>Please wait.</p>
+        </div>
+
+</div>
+<div id="jump1content">
+          <div style="text-align:center; margin-top:20%; font-family:sans-serif;">
+            <h1 style="color:#d9534f;">Booting into Bluetooth Mode...</h1>
+            <p>You can now safely close this browser tab.</p>
+        </div>
+
+</div>
+
 <div id="emptycontent">
 </div>

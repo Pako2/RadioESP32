@@ -1,36 +1,6 @@
 # RadioESP32
-## Notice
-This project is not intended for **ESP32-S3** microcontrollers. Due to several differences, I have decided to dedicate a separate repository for them: [RadioESP32S3](https://github.com/Pako2/RadioESP32S3).
-
-## Introduction
-&nbsp;&nbsp;&nbsp;&nbsp;First of all, it is worth mentioning that this project would probably never have been created without the popular project [ESP32Radio-V2](https://github.com/Edzelf/ESP32Radio-V2) by [Edzelf](https://github.com/Edzelf). I am very grateful to the author for it and thank him for his work. Originally, of course, I took over the original project in its unchanged form, but very soon it stopped being convenient for me. I especially disliked the fact that the display did not display characters with diacritics.\
-&nbsp;&nbsp;&nbsp;&nbsp;The second biggest problem for me was the functioning of the file player from the SD card. One of my requirements for the device was that it should allow listening to audiobooks. In this case, however, the files need to be played in a defined (i.e. alphabetical) order. But that did not work with the original SW. After copying the files from the HDD to the SD card, the files were always arranged in a kind of random order and listening to the individual parts in the correct order was very complicated (the correct part had to be selected manually).\
-&nbsp;&nbsp;&nbsp;&nbsp;In addition to the two problems mentioned above, there were a number of other small things that I imagined to work differently. For example, I can mention a function that ensured that the last station listened to was always played after switching on (and with the last volume level used). But that did not suit me at all, I prefer that a default station (with the default volume) be played after switching on the device. I also planned to add some new functions that the original design did not have. In particular, I wanted the radio to be able to be turned on and off by pressing one (same) button and for the radio to have a sleep function (i.e. automatic shutdown after a set time).\
-&nbsp;&nbsp;&nbsp;&nbsp;Despite the above facts, I took over several things from the original [ESP32Radio-V2](https://github.com/Edzelf/ESP32Radio-V2) project almost unchanged and my work was thus made easier.\
-&nbsp;&nbsp;&nbsp;&nbsp;The website design, the way the ESP32 communicates with the computer (via a web browser), and a few other solutions (like how to upgrade or work with the configuration file) are taken from the [esp-rfid](https://github.com/esprfid/esp-rfid) project. I have used it in several projects and it exactly suits my needs and ideas.\
-&nbsp;&nbsp;&nbsp;&nbsp;Complete project documentation can be found in the [UserGuide_EN.pdf](doc/UserGuide_EN.pdf) file.
-
-## A few differences from Edzelf's ESP32Radio:
-1. There is no support for OLED displays. The options are either TFT display or none
-2. The SD card is not connected in SPI mode, but in 1-bit SD mode (the SD_MMC.h library is used)
-3. It cannot be controlled using MQTT, nor via commands via the serial port
-4. SPIFFS is not used, but LittleFS
-5. The device configuration is not stored in the NVS partition, but as a file in the SPIFFS partition (which is actually of the LittleFS type)
-6. The last played station and volume are not remembered. After power on/reset, the default volume is used and the default station is played
-7. No deep sleep mode is used, but a real physical shutdown of the power supply (so the display, DAC and amplifier are also turned off)
-8. The device also has an automatic power off function after a set time (so-called sleep timer)
-9. Wider support for audio formats (audio files with mp3, m4a, ogg, aac, wav and flac formats can be played)
-10. More comfortable audio player. Supports common commands such as pause/play, stop, jump forward and backward. The display and the web page show the current position
-11. In the tracklist.dat file, all files (within one folder) are sorted alphabetically, so there is no problem with playing audio books (but it is possible to select the playback mode in random order)
-12. Wider support for infrared remote control protocols (and therefore also controllers) and a much more comfortable way of learning commands
-13. The number of radio station presets is also limited to 99. However, **each** preset can be selected (using the remote control) by its number (of course, not only a single-digit but also a two-digit number !)
-14. Characters with diacritics (such as č, ř, ä, ü, etc.) are displayed normally (i.e. including diacritics), so that the texts are easier to read
-15. The station name is displayed as defined by the user in the preset list, not as presented in the metadata
-16. Texts are displayed in a significantly larger font. If the text does not fit on one line, scrolling text is used
-17. OTA via web interface. The user can use the device's built-in web server to:\
-&nbsp;&nbsp;&nbsp;A. find out that there is a new release\
-&nbsp;&nbsp;&nbsp;B. download the new release to the computer (however, unpacking the downloaded ZIP file must be done outside the web interface)\
-&nbsp;&nbsp;&nbsp;C. perform an upgrade
+RadioESP32 is a high-performance multimedia platform built on the ESP32 architecture. Originally starting as a dedicated standalone internet radio, the platform has evolved significantly. Starting with version 2.0.0, the project has been completely re-engineered into an advanced multi-boot system that transforms a single hardware device into an Internet Radio player, a local SD card audiobook player, and a high-fidelity Bluetooth loudspeaker – all managed by an independent recovery and deployment application.\
+**Note:** Complete project documentation can be found in the [UserGuide_EN.pdf](doc/UserGuide_EN.pdf) file.
 
 ### Display and embedded web server preview
 For illustration, you can see three photos of the display. You may be surprised to see that some of the text lines are blurred. The explanation is simple. This is scrolling text, because otherwise it wouldn't fit on the display!\
@@ -46,107 +16,203 @@ There's no need to describe the appearance of the web interface. You can learn m
   <img src="assets/screenshots.webp"  alt="Screenshots" title="Screenshots" width="99%"/>
 </p>
 
-As you can see in the screenshots, the user has quite a lot of freedom in connection - he can set most of the GPIO via the web interface.
-**The exception is these three GPIO groups:**
-1. Display connection (SPI signals are fixed by the manufacturer and control signals are set in *platformio.ini* - forced by the used **TFT_eSPI** library)
-2. Selection of ADC channel for battery measurement (I chose channel **adc1-0**, which corresponds to **GPIO 36**)
-3. SD card connection in 1-bit SD mode (fixed by the manufacturer)
+## Project Origin & Acknowledgments
+This project would likely never have been created without the popular [ESP32Radio-V2](https://github.com/Edzelf/ESP32Radio-V2) project by [Edzelf](https://github.com/Edzelf). I am deeply grateful to the author for his outstanding work, which served as the original foundation for this software.
 
-It is therefore obvious that the interested party can try out most of the SW functions even without an "official" printed circuit board.
+While I initially deployed the original project in its unchanged form, several limitations quickly became apparent. My primary motivation for rewriting and expanding the software stemmed from two major issues:
 
-## Development with VS Code and PlatformIO
-&nbsp;&nbsp;&nbsp;&nbsp;I use VS Code/PlatformIO as a development environment. Using the *platformio.ini* file, it is possible to create several software variants by specifying or not specifying the so-called "build-flag". The **DATAWEB**, **SDCARD**, **BATTERY**, **AUTOSHUTDOWN** and **OTA** build-flags are particularly important.\
-&nbsp;&nbsp;&nbsp;&nbsp;● Using the **DATAWEB** build-flag, the SW is compiled in a version that has the web server files stored in the "LittleFS" file system area, while without the **DATAWEB** parameter, the SW is compiled in a version in which the web server files are stored in the program memory (using the PROGMEM attribute) in the form of variables. I call the first version <ins>data</ins> for short, the second <ins>webh</ins>. The <ins>data</ins> variant is intended primarily for the development phase (but nothing prevents it from being used as a production one), while the <ins>webh</ins> variant is intended exclusively as a production one and it is more or less impossible to develop with it.\
-&nbsp;&nbsp;&nbsp;&nbsp;● Using the **SDCARD** build-flag, support for the SD card file player function is enabled. Without using the aforementioned build-flag, the device is only able to play radio stations.\
-&nbsp;&nbsp;&nbsp;&nbsp;● Using the **BATTERY** build-flag, support for the supply voltage measurement function is enabled. This is of course suitable in the case of battery power. The display then shows the charge level.\
-&nbsp;&nbsp;&nbsp;&nbsp;● Using the **AUTOSHUTDOWN** build-flag, the support of the function that allows the device to be turned on and off with one button and also the sleep function (adjustable automatic shutdown time) is enabled. Of course, the condition is that the HW is equipped with the necessary circuit.\
-&nbsp;&nbsp;&nbsp;&nbsp;● Using the **OTA** build-flag, the function that allows a comfortable upgrade from the web interface is enabled. See the Upgrade chapter in the documentation file [UserGuide_EN.pdf](doc/UserGuide_EN.pdf).\
-4 types of “envs” are also prepared in the *platformio.ini* file. With them, you can select both the development kit variant (4 or 8 MB) and the SW variant with or without a display. So, 4 combinations in total (**noota4mb**, **wota8mb**, **noota4mbnod** and **wota8mbnod**). The relevant “env” version is selected by commenting/uncommenting in the [platformio] section.
+- **Localization:** The original display implementation did not support accented diacritics, which was critical for a proper local user experience.
 
-### Using the DATAWEB build-flag, I proceed as follows when developing the SW:
-1) Development takes place exclusively in the software <ins>data</ins> variant (the DATAWEB build-flag is used in the *platformio.ini* file). After editing the source files, compilation is performed in the usual way and the device is upgraded via the USB (serial) port.
-2) If it is necessary to edit the *.html or *.js files of the web server to fix or add a function, you need to open the page **http://IP_address_of_the_device/edit**. For this to work, the PC must be connected to the Internet. The online library "ace" (**A**jax.org **C**loud9 **E**ditor) is used for editing. For more information, see **https://ace.c9.io/**.
-3) Once the required functionality has been achieved using steps 1 and 2, the <ins>webh</ins> variant of the software can be created. This is done by running the user script **Download FS & Create WEBH**, which is available via the **PROJECT TASKS/selected_env_version/Custom** menu. This will transform the web server files (from the LittleFS file system) into <ins>webh</ins> files. The utility "pio-esp32-esp8266-filesystem-downloader" by maxgerhardt is used to download the file system image and extract it.
-4) Switch to <ins>webh</ins> variant (in the *platformio.ini* file, the build-flag DATAWEB needs to be removed [commented out]) and compile. The resulting image *firmware_WEBH_XXX.bin* (created during the compilation process) can be found in the **/bin/selected_env_version** directory. The version designation *XXX* is also set as a “build-flag” in the *platformio.ini* file before compilation.
+- **Audiobook Playback:** One of my core requirements was the ability to listen to audiobooks from an SD card. Audiobooks require files to be played in a strict, defined alphabetical order. In the original software, copying files from a PC to an SD card resulted in them being indexed and played in a seemingly random order, making sequential listening highly complicated without constant manual track selection.
 
-## How to install
-Experienced Tinkerers who have installed VS Code with PlatformIO supplement and normally use it probably do not need any other advice. Everything is described in the previous text. However, there may be some less experienced users who are interested in trying the project and do not need to make their own modifications. In this case, they can use pre-compiled binaries and install them in ESP32 without VS Code/Platformio.
-The procedure is as follows (valid only to Windows users):
-1. The default assumption is that the development kit is connected to the USB port of your computer and you know the number of (virtual) COM port. Suppose it's a *COM10*
-2. Download the latest [RadioESP32_binaries.zip](https://github.com/Pako2/RadioESP32/releases/latest/download/RadioESP32_binaries.zip) and unpack the ZIP file to some suitable (work) folder
-3. In the selected folder, the **bin** folder appears that contains everything you need
-4. Open the command line window (**cmd.exe**) so that you are in the above folder **bin**
-5. Enter the **flash.bat** command. The following offer should appear:
+Additionally, I preferred a different default behavior. Instead of always resuming the last played station at the previous volume level upon power-up, I prefer the device to initialize to a pre-defined default station and default volume. I also planned to integrate entirely new hardware and software features, such as single-button power toggling and an automated sleep/turn-off timer.
+
+Despite these changes, several core elements from Edzelf's project were retained, which significantly aided my early development. Furthermore, the web interface design, the communication method between the ESP32 and the browser, and the configuration file management system were adopted from the [esp-rfid](https://github.com/esprfid/esp-rfid) project - a highly reliable setup I have successfully utilized across multiple designs.
+
+# Evolution in Version 2.0.0+
+During development, I realized that with a purely software-driven approach, the existing hardware design could be utilized as a full-featured Bluetooth loudspeaker. To implement this comfortably, version 2.0.0 underwent a fundamental architectural overhaul.
+To streamline production and focus on maximum stability, legacy sub-variants (such as designs without a display or designs storing web server assets directly inside a volatile file system partition) were abandoned. Moving forward, the project is maintained as a single production variant: always equipped with a display and always compiling web server assets directly into the program memory. This specific design is mandatory to support the automated multi-boot Update Manager system.
+
+## Upgrading from Version 1.X.X
+If you are upgrading an existing device from a 1.X.X release, your configuration file is fully compatible with the new version. However, due to the fundamental architectural changes mentioned above, a clean installation via cable is required:
+- **Backup** your current configuration using the Backup & Restore menu in your existing web interface.
+- Perform a **full installation** over a USB cable using the new Flash utility (flash.bat).
+- **Restore** your configuration file using the Backup & Restore menu in the new version 2.0.0 interface.
+
+**Note:** 
+*Before proceeding with the upgrade, please verify that your hardware meets the new minimum requirements (8MB Flash and PSRAM), as legacy 4MB modules are no longer supported.*
+
+
+## Legacy Differences: Radio Application vs. Edzelf's ESP32Radio
+The following enhancements and modifications apply exclusively to the Internet Radio application (and its web configuration) compared to the original Edzelf implementation:
+
+- **Strict Alphabetical Playback:** Fixed the random indexing issue on SD cards. Files and folders are sorted properly, enabling seamless audiobook listening. However, shuffle mode can be turned on as needed.
+
+- **Diacritics & Extended Character Support:** The display engine was rewritten to support full native character mapping and custom fonts.
+
+- **Predictable Initialization:** The device turns on to a user-defined default station and safe volume level rather than resuming the last state.
+
+- **Single-Button Power Toggle:** Hardware-software integration allows turning the entire device completely on and off using the same single physical button.
+
+- **Integrated Sleep Timer:** Supports a configurable sleep countdown that automatically powers down the hardware.
+
+- **Comfortable Web-Based IR Learning:** Unlike the original project, adding or modifying infrared remote control commands is managed through an incredibly intuitive and automated web interface, allowing the device to capture and assign raw hardware codes on the fly.
+
+# Full-Featured Bluetooth Loudspeaker Application
+The Bluetooth Loudspeaker mode (running on OTA\_1) is engineered to deliver a premium commercial-grade user experience, offering deep visual feedback and control options rarely found in DIY audio systems.
+
+## Key features include:
+- **Identical Display Dashboard:** The physical display mirrors the rich visual interface of the Radio application, showing a real-time battery status indicator, an active volume bar, and a track progress bar.
+
+- **Dynamic Status Icons:** Features clear visual indicators for Bluetooth connectivity (color-coded blue for active connection, grey for disconnected state) along with dedicated Play/Pause status indicators.
+
+- **Rich Metadata & Auto-Scrolling:** Streams live metadata directly from the connected smartphone. Track titles, artist names, and album details are fully processed and rendered with native diacritic support, automatically triggering a smooth text-scrolling engine if the text length exceeds the screen boundaries.
+
+- **Dual Physical Control Layers:** The loudspeaker can be controlled fully via the mechanical physical rotary encoder or completely hands-free using an Infrared Remote Control (handling Play, Pause, Track Skip, and Volume adjustments).
+
+- **Centralized Configuration:** Because the Bluetooth application completely turns off the Wi-Fi stack to eliminate protocol overhead and interference, it does not host a web server. Instead, all Bluetooth-specific settings (including custom broadcast device naming and the advanced IR remote control command learning) are comfortably configured inside the unified web interface of the Internet Radio application.
+
+# System Architecture & Multi-Boot Partitioning
+Due to the strict hardware limitations of the ESP32 chip (specifically the high instability and memory constraints of running Wi-Fi and Bluetooth stacks simultaneously) the system separates core features into completely independent firmware binaries.
+
+The system utilizes a custom partition layout designed for 8MB Flash chips. The minimum required hardware configuration is the ESP32-WROVER-E-N8R4 module. Volatile PSRAM memory is mandatory, as modern versions of the underlying audio libraries will not function without it.
+
+## The memory layout divides the hardware into four distinct primary zones:
+| Partition Type | Application Name | Core Functionality | Network State |
+| - | - | - | - |
+| **Factory** | Update Manager | Recovery, deployment, and binary flashing | Wi-Fi (Station with Internet) |
+| **OTA\_0** | Internet Radio | Web-streaming, SD card media player | Wi-Fi (Station / Initial AP Setup) |
+| **OTA\_1** | BT Loudspeaker | High-fidelity A2DP audio playback | Completely Disabled (No Wi-Fi) |
+| **LittleFS** | Configuration | Shared system settings and profiles | Non-volatile storage |
+
+All three applications share a single, unified configuration file stored in the LittleFS zone. Switching between applications triggers a low-level hardware reset using direct RTC controller registry manipulation, ensuring that the hardware cache and DMA controllers are completely cleared for a pure warm boot.
+
+# Independent Update Manager
+Because individual OTA application partitions contain completely different binary structures (Radio vs. Bluetooth), traditional OTA upgrades (where a new version is uploaded to an inactive slot and toggled) are impossible.
+
+The project solves this by deploying a completely independent recovery application in the factory partition. When triggered via the display menu or the radio's web interface, the device reboots into the red-themed Update Manager web server (accessible via the credentials defined in the source code). From this dashboard, users can view live tables comparing current firmware versions against the latest versions available online, perform automated network updates, create full system binary backups, or deploy manual downgrades from local files.
+<p float="left">
+  <img src="assets/UpMan.webp"  alt="Update Manager" title="Update Manager" width="99%"/>
+</p>
+
+The Update Manager features critical system-level fail-safes. If the supply battery drops below a safe operational threshold during an update cycle, an asynchronous JavaScript modal hard-locks the entire web interface, preventing user interactions until safe power parameters are restored, eliminating the risk of accidental firmware bricking.
+
+## Advanced Graphics Engineering
+To achieve absolute long-term stability, the graphics pipeline was completely refactored. The Bluetooth application runs an aggressive real-time A2DP data sink. Under standard implementations, multi-core thread collisions frequently occur on the shared SPI display bus when high-priority Bluetooth background tasks on Core 0 interrupt the main application execution loop on Core 1.
+
+The system eliminates these race conditions by removing traditional RTOS mutexes entirely. Instead, all graphic subsystems, status readouts, and display bars (such as the volume bar, battery indicator, progress bars, and scrolling metadata tracks) are completely centralized under a single-task, asynchronous flag-driven pipeline in the display loop. Asynchronous events from Bluetooth callbacks merely flag status variables in RAM, which are safely ingested and drawn by a single dedicated display task.
+
+# Development and Build Flags
+The project is developed in VS Code using the PlatformIO IDE paired with the Pioarduino extension. Using environment build flags in `platformio.ini`, the firmware behavior is customized using the following core definitions:
+
+- **DATAWEB=true/false:** Setting this flag to `true` compiles a development variant where web server assets are loaded dynamically from the LittleFS partition, allowing real-time, browser-based source editing via the integrated online [Ace editor](https://ace.c9.io/). Setting this to `false` creates the production variant, compressing and injecting all HTML and JS assets directly into the program memory (PROGMEM) as static variables. This is the mandatory format for deployment binaries.
+
+- **SDCARD:** Compiles full support for the local SD card hardware and alphabetical media player engine.
+
+- **BATTERY:** Enables power monitoring, enabling precise voltage calibration routines and rendering live battery status bars across both the physical display and web dashboards.
+
+- **AUTOSHUTDOWN:** Compiles the control logic for the single-button soft power toggle circuit and the automatic sleep timer.
+
+# Third-Party Libraries & Acknowledgments
+This project relies heavily on the open-source community. I would like to express my sincere gratitude to the authors of the following exceptional libraries, whose hard work made this multi-boot platform possible:
+
+- **[ESP32-audioI2S](https://github.com/schreibfaul1/ESP32-audioI2S) by schreibfaul1** – The core engine powering the high-performance internet radio streaming and SD card media playback.
+
+- **[ESP32-A2DP](https://github.com/pschatzmann/ESP32-A2DP) by pschatzmann** – The backbone of the Bluetooth application, providing a reliable and robust real-time A2DP audio sink.
+
+- **[ESPAsyncWebServer](https://github.com/ESP32Async/ESPAsyncWebServer)** – Essential for driving the asynchronous, responsive web interfaces across the platform slots.
+
+- **[ArduinoJson](https://github.com/bblanchon/ArduinoJson) by bblanchon** – Used for fast, memory-efficient parsing of configuration files and the update manager tables.
+
+- **[base64](https://github.com/Densaugeo/base64_arduino) by Densaugeo** – Utilized for secure encoding and handling of system assets and network communication data.
+
+- **[Arduino-IRremote](https://github.com/Arduino-IRremote/Arduino-IRremote)** – Powering the automated infrared remote control receiver and code-learning capabilities.
+
+- **[TFT\_eSPI](https://github.com/Bodmer/TFT_espi) by Bodmer** – The highly optimized graphics driver used to render sprites and smooth scrolling text on the SPI display.
+
+- **[U8g2](https://github.com/olikraus/u8g2) by olikraus** & **[U8g2\_for\_TFT\_eSPI](https://github.com/Bodmer/U8g2_for_TFT_eSPI) by Bodmer** – Providing the comprehensive font support required for native localization, accented diacritics, and system icons.
+
+## PlatformIO Environment & Custom Python Targets
+The project utilizes advanced customization features of PlatformIO with the Pioarduino extension to automate the compilation, transformation, and deployment of firmware slots. Since standard environment filters naturally restrict automated serial flashing to the `OTA_0` partition, a dedicated set of specialized automation scripts was engineered to streamline the development workflow:
+
+- **`app_deploy.py` (Binary Archiving):** Executed automatically post-build. It automatically moves and renames compiled images into the structured `/bin/<env>/` directory, preparing them for deployment.
+
+- **`custom_targets.py` (Advanced Workflow Automation):** Exposes core system functions accessible comfortably directly via the *Pioarduino: Project Tasks / \<env\> / Custom* IDE side menu. It processes two critical automated workflows:
+
+  - **Download FS & Create WEBH:** Automates the complete transformation of production web assets. It downloads the live file system image from the hardware using maxgerhardt's downloader utility, extracts the HTML and JS assets from `LittleFS`, and translates them directly into compressed C++ array data variables ready for `PROGMEM` generation.
+
+  - **Upload custom binary:** The primary development flashing mechanism. Instead of pushing blindly to `OTA_0`, this target programmatically parses the local partition configuration table, dynamically locates the precise memory address boundaries for the active target environment, and executes a targeted wired upload directly to the correct slot (`OTA_1` for Bluetooth loudspeaker or `factory` for the Update Manager).
+
+## Production Flash Utilities
+For initial provisioning, assembly, and bulk deployment outside the VS Code IDE development sandbox, a dedicated, standalone host script named Flash Utilities is used.
 <p float="left">
   <img src="assets/flash.bat.png"  alt="Flash menu" title="Flash menu"/>
 </p>
+This standalone batch utility operates strictly as a master installation tool tailored for two main deployment scenarios:
 
-6. Select the desired firmware version (ie press the appropriate number) and then press Enter
-7. You will then be prompted to enter a COM port. Write the corresponding name (by example in point **1** it would be *COM10*) and press Enter
-8. There should be installed the necessary SW into ESP32
-9. After completion you can continue according to the **First start** chapter
+1. **Full Environment Initialization:** Performs the first-time wired flashing of a fresh, raw ESP32 chip. It writes the global bootloader configurations, custom multi-boot partition boundaries, the initial `LittleFS` shared configuration image, and all three application binaries concurrently.
 
-<ins>Note:</ins>
-I strongly recommend development kits with 8MB memory. This will greatly facilitate any subsequent upgrades, as the configuration will remain in force even after the upgrade.
-On the other hand, in the case of 4MB development kits, the configuration is deleted (during upgrade) and must be done again. Of course, it is possible to make it easier when you make a backup first and make a restore after upgrading. In the test phase, the 4MB version is also convenient, everything should work normally.
+2. **Targeted Service Upgrades:** Provides a safe serial bypass tool to manually write or restore a single specific slot over a wired serial connection. This is the mandatory path required for initial installation or forced rewrites of the factory recovery application partition without formatting or impacting user profiles.
 
-## First start
-When the device is started for the first time, it runs in default settings and in AP mode. On the PC, connect to the **RadioESP32** network and in the browser to the address **192.168.4.1**. A web page should appear through which the device settings need to be made.
+On a fresh device provisioning cycle, the system triggers a default fallback standalone Wi-Fi Access Point named **RadioESP32**. Navigating a web browser to `192.168.4.1` loads the initial onboarding setup screen to connect the multi-boot hardware platform to local wireless station configurations.
 
-## Design of the device
-The circuit diagram and printed circuit board were created using the Eagle design system.
+# Hardware Design & Component Selection
+The physical hardware architecture is designed using the free/personal-use tier of Autodesk Eagle, utilizing a dual-stage isolation approach to completely eliminate ground loops, digital switching noise, and interference.
+
 ### Wiring diagram
 ![Wiring diagram](assets/Schematic.png)
+
 ### Printed circuit board
 <p float="left">
   <img src="assets/Board-top.png"  alt="PCB top side" title="PCB top side" width="45%"/>
   <img src="assets/Board-bottom.png"  alt="PCB bottom side" title="PCB bottom side" width="45%"/> 
 </p>
 
-## Choice of components
-In the first phase of development, I used the VS1053 module (as a DAC) following Edzelf's example. It worked well, but I found this solution unnecessarily expensive and quite problematic (for example, I once accidentally bought a VS1003 instead and it didn't work well). That's why I completely abandoned this path and switched exclusively to a solution with I2S. As the basis for the SW, I chose the excellent [ESP32‑audioI2S](https://github.com/schreibfaul1/ESP32-audioI2S) library from the author [shreibfaul1](https://github.com/schreibfaul1). This led to the need to use a type of ESP32 development kit that is equipped with PSRAM memory. Without this memory, no more complex project can be created with the library, and you will soon run into a lack of RAM. For this reason, I chose a WROVER development kit. It should also be noted right at the beginning that the chip revision must be at least **Rev 3**. I found that older revisions do not work well. I also recommend using the module version with 8MB memory. Regular versions with 4MB memory can also be used, but this means that the possibility of a convenient upgrade from the web environment is lost. This has already been explained in more detail in the previous text.\
-<ins>Note:</ins> The printed circuit board also includes the possibility of using external PSRAM memory, but this is not installed when using the WROVER kit, it is already present on the mentioned kit.
-
+### Choice of components
+In the first phase of development, I used the VS1053 module (as a DAC) following Edzelf's example. It worked well, but I found this solution unnecessarily expensive and quite problematic (for example, I once accidentally bought a VS1003 instead and it didn't work well). That's why I completely abandoned this path and switched exclusively to a solution with I2S.
+- **Main Processor:** ESP32-WROVER-E module (Silicon Revision 3 or higher, minimum 8MB Flash and 4MB PSRAM).
 <p float="left">
   <img src="assets/ESP32-DevKitC-VE-T.png"  alt="Development board - top side" title="Development board - top side" width="45%" />
   <img src="assets/ESP32-DevKitC-VE-B.png"  alt="Development board - bottom side" title="Development board - bottom side" width="45%" /> 
 </p>
 
-I decided that the basic supply voltage of the device will be 12V, because it can be very well implemented with three 18650 Li-ion cells. However, the ESP32 development kit requires a voltage of 5V (as well as some other components) and therefore it is necessary to use a suitable step-down module. I chose the **Mini560** module, which is sufficiently dimensioned (both voltage and current) and is equipped with an EN input (necessary for my needs).
+- **Power Supply:** 12V primary input, optimized to run efficiently from three series-connected 18650 Li-ion cells or a standard wall adapter. A high-efficiency Mini560 step-down module regulates this down to a stable 5V rail. The module's EN (Enable) pin is directly wired into the single-button latching circuit for hard physical power management.
 <p float="left">
   <img src="assets/Mini560-T.png"  alt="Step-down converter top side" title="Step-down converter top side" width="45%" />
   <img src="assets/Mini560-B.png"  alt="PStep-down converter bottom side" title="Step-down converter bottom side" width="45%" /> 
 </p>
 
-Originally (like Edzelf) I kept the option to choose between OLED and TFT display when compiling the software. But I finally gave up and OLED displays are no longer supported at all. So there are only two options - either a TFT display or none. I used a display with a diagonal of 1.77 inches and a resolution of 160x128. However, it should not be a problem to use any other one, supported by the TFT_eSPI library.
-<p float="left">
-  <img src="assets/TFT-T.png"  alt="TFT - top side" title="TFT - top side" width="45%" />
-  <img src="assets/TFT-B.png"  alt="TFT - bottom side" title="TFT - bottom side" width="45%" /> 
-</p>
-
-The essential part of the device is the digital to analog (DAC) converter. I chose a module with the PCM5102A chip, which suited me due to its dimensions and also because the audio output is not only connected to a jack connector, but also to a pin header. This greatly simplifies the connection of the converter to the motherboard.
+- **Audio DAC:** PCM5102A I2S module, selected for its high dynamic range and integrated analog out pin liars, eliminating complex internal chassis cabling.
 <p float="left">
   <img src="assets/PCM5102A-T.png"  alt="DAC - top side" title="DAC - top side" width="45%" />
   <img src="assets/PCM5102A-B.png"  alt="DAC - bottom side" title="DAC - bottom side" width="45%" /> 
 </p>
 
-As an amplifier, I chose the PAM8406 type, which is powerful enough, works with a 5V supply voltage, and can be easily soldered by hand. This amplifier has one more advantage - it can operate in either class D or AB. I have kept the option of choosing on the printed circuit board as well - the mode is selected by placing the jumper.
-<p align="center" width="100%">
-    <img width="33%" src="assets/PAM8406.png"  alt="Amplifier" title="amplifier">
-</p>
-
-It is necessary to include isolation transformers between the DAC and the amplifier to break the ground loop and prevent unpleasant interference. I chose transformers that are only 9.1mm high and fit well between the converter board and the motherboard.
+- **Ground Loop Isolation:** Two low-profile 9.1mm audio isolation transformers are placed inline directly between the DAC outputs and the amplifier inputs, successfully blocking digital hum and cross-talk.
 <p float="left">
   <img src="assets/TR-5.png"  alt="Isolation transformers" title="Isolation transformers" width="55%" />
   <img src="assets/TR-1.png"  alt="Isolation transformer" title="Isolation transformer" width="35%" /> 
 </p>
 
-An important part of the device is also a rotary encoder. I used a completely common and cheap type EC11.\
-An obvious requirement for the device's function was also the possibility of control via infrared control. I tried the VS1838B type as a receiver and it worked well.\
-Finally, it was necessary to solve the method of connecting the supply voltage and speakers to the motherboard. I wanted to avoid terminal blocks with screws and therefore I chose faston connectors with a width of 4.8mm.
+- **Amplifier Stage:** PAM8406 5V stereo amplifier IC. This specific chip was chosen because it can operate in either Class-D (high efficiency for battery operation) or Class-AB (low RF noise for clean radio reception). The operating mode is manually selected on the PCB via hardware jumpers.
+<p align="center" width="100%">
+    <img width="33%" src="assets/PAM8406.png"  alt="Amplifier" title="amplifier">
+</p>
+
+- **Display Interface:** 1.77-inch SPI TFT panel (160x128 resolution) driven natively by the optimized TFT\_eSPI library.
+<p float="left">
+  <img src="assets/TFT-T.png"  alt="TFT - top side" title="TFT - top side" width="45%" />
+  <img src="assets/TFT-B.png"  alt="TFT - bottom side" title="TFT - bottom side" width="45%" /> 
+</p>
+
+- **User Control:** A robust EC11 mechanical rotary encoder with an integrated push-button handles physical navigation, complemented by a VS1838B infrared receiver supporting automatic remote control code learning.
 <p float="left">
   <img src="assets/Rotary_encoder_EC11.png"  alt="Rotary encoder" title="Rotary encoder" width="40%" />
   <img src="assets/VS1838B.png"  alt="Infrared receiver" title="Infrared receiver" width="40%" /> 
+</p>
+
+- **Chassis Connections:** Traditional screw terminals were replaced with high-reliability 4.8mm male Faston terminals soldered directly to the PCB for all primary power inputs and speaker outputs, ensuring vibrating-proof connections inside the speaker enclosure.
+<p float="left">
   <img src="assets/Terminal_4.8mm.png"  alt="Faston connector" title="Faston connector" width="10%" /> 
 </p>
 
@@ -163,5 +229,4 @@ Finally, you can see a few pictures of the printed circuit board completely asse
 
 ### License
 The code parts written by the author of the **RadioESP32** project are licensed under [GPL-3.0](LICENSE), 3rd party libraries that are used by this project are licensed under different license schemes, please check them out as well.
-
 

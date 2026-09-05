@@ -230,10 +230,8 @@ bool addToFileList(const char *newfnam)
              strlen(newfnam) + 1;
   mp3entry.entrylen = entrylen;
   strcpy(lnam, newfnam); // Set a new lastmp3spec
-#if defined(DISP)
   ESP_LOGW(STAG, "Added %3u : %s", n, // Show last part of filename
            getCurrentShortSDFileName());
-#endif
   if (trackfile_isopen) // Outputfile open?
   {
     res = true;                           // Yes, positive result

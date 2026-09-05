@@ -1,0 +1,8 @@
+{
+  "radio_version": "v2.0.0",
+  "radio_file": "radio_v2.0.0.bin",
+  "btls_version": "v2.0.0",
+  "btls_file": "bluetooth_v2.0.0.bin",
+  "upman_version": "v2.0.0",
+  "upman_file": "upman_v2.0.0.bin"
+}

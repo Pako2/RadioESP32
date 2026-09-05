@@ -15,7 +15,7 @@ void setupWebServer()
   weso.onEvent(onWsEvent);
   server.addHandler(&weso);
 
-#if defined(DATAWEB)
+#if DATAWEB
 server.addHandler(new FS_editor(LittleFS, http_username, http_password));
 
 
@@ -77,63 +77,24 @@ server.addHandler(new FS_editor(LittleFS, http_username, http_password));
   });
 #endif
 
-#if defined(OTA)
-  server.on("/update", HTTP_POST, [](AsyncWebServerRequest *request)
-  {
-		AsyncWebServerResponse * response = request->beginResponse(200, "text/plain", shouldReboot ? "OK" : "FAIL");
-		response->addHeader("Connection", "close");
-		request->send(response);
-  }, [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
-  {
-		if (!request->authenticate(http_username, http_password))
-    {
-      return request->requestAuthentication();
-		}
-		if (!index)
-    {
-      ESP_LOGW(WTAG, "Firmware update begin ...");
-			if (!Update.begin())
-      {
-#if defined(DEBUG)
-				Update.printError(Serial);
-#endif
-			}
-		}
-		if (!Update.hasError())
-    {
-			if (Update.write(data, len) != len)
-      {
-#if defined(DEBUG)
-				Update.printError(Serial);
-#endif
-			}
-		}
-		if (final)
-    {
-			if (Update.end(true))
-      {
-        ESP_LOGW(WTAG, "Firmware update finished: %uB\n", index + len);
-				shouldReboot = !Update.hasError();
-			}
-#if defined(DEBUG)
-      else 
-      {
-				Update.printError(Serial);
-			}
-#endif
-		}
-  });
-#endif
-
   server.onNotFound([](AsyncWebServerRequest *request)
   {
     AsyncWebServerResponse *response = request->beginResponse(404, "text/plain", "Not found (404)");
     request->send(response);
   });
+  #if defined(ROLE_RADIO)
   server.on("/login", HTTP_GET, [](AsyncWebServerRequest *request)
   { 
     request->send(200, "text/plain", "Success");
   });
+  #else
+	server.on("/login", HTTP_GET, [](AsyncWebServerRequest *request) {
+		if (!request->authenticate(http_username, http_password)) {
+			return request->requestAuthentication();
+		}
+		request->send(200, "text/plain", "Success");
+	});
+  #endif
   server.on("/heap", HTTP_GET, [](AsyncWebServerRequest *request)
   {
     request->send(200, "text/plain", String(ESP.getFreeHeap()));
@@ -144,4 +105,112 @@ server.addHandler(new FS_editor(LittleFS, http_username, http_password));
 #endif
   server.rewrite("/", "/index.html");
   server.begin();
+
+#if defined(ROLE_MENU)
+#include "esp_partition.h"
+#include <ArduinoJson.h>
+#include "LittleFS.h"
+// --- ENDPOINT FOR DOWNLOADING THE EXACT RADIO BACKUP (.BIN) ---
+server.on("/download_radio", HTTP_GET, [](AsyncWebServerRequest *request){
+    if(!request->authenticate("admin", "vasesilneheslo")) {
+        return request->requestAuthentication();
+    }
+
+    // Find the raw partition target for "app0"
+    const esp_partition_t* partition = esp_partition_find_first(
+        ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_0, "app0"
+    );
+
+    if (partition == NULL) {
+        request->send(404, "text/plain", "Partition app0 not found!");
+        return;
+    }
+
+    // Read the exact compiled code size from binaries.json
+    uint32_t exactSize = partition->size; // Fallback to full partition size
+    if (LittleFS.exists("/binaries.json")) {
+        File file = LittleFS.open("/binaries.json", "r");
+        if (file) {
+            JsonDocument sizeDoc;
+            if (deserializeJson(sizeDoc, file) == DeserializationError::Ok) {
+                uint32_t savedSize = sizeDoc["radio"]["size"] | 0;
+                if (savedSize > 0 && savedSize <= partition->size) {
+                    exactSize = savedSize; // Use the optimized exact size
+                }
+            }
+            file.close();
+        }
+    }
+
+    // Create an asynchronous chunked stream response with the exact size
+    AsyncWebServerResponse *response = request->beginResponse(
+        "application/octet-stream", exactSize,
+        [partition, exactSize](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
+            size_t toRead = maxLen;
+            if (index + toRead > exactSize) {
+                toRead = exactSize - index;
+            }
+            if (toRead > 0) {
+                esp_partition_read(partition, index, buffer, toRead);
+            }
+            return toRead;
+        }
+    );
+    response->addHeader("Access-Control-Allow-Origin", "*"); 
+    
+    response->addHeader("Content-Disposition", "attachment; filename=radio_backup.bin");
+
+    request->send(response);
+});
+
+// --- ENDPOINT FOR DOWNLOADING THE EXACT BLUETOOTH BACKUP (.BIN) ---
+server.on("/download_bluetooth", HTTP_GET, [](AsyncWebServerRequest *request){
+    if(!request->authenticate("admin", "vasesilneheslo")) {
+        return request->requestAuthentication();
+    }
+
+    const esp_partition_t* partition = esp_partition_find_first(
+        ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_1, "app1"
+    );
+
+    if (partition == NULL) {
+        request->send(404, "text/plain", "Partition app1 not found!");
+        return;
+    }
+
+    uint32_t exactSize = partition->size; // Fallback to full partition size
+    if (LittleFS.exists("/binaries.json")) {
+        File file = LittleFS.open("/binaries.json", "r");
+        if (file) {
+            JsonDocument sizeDoc;
+            if (deserializeJson(sizeDoc, file) == DeserializationError::Ok) {
+                uint32_t savedSize = sizeDoc["btls"]["size"] | 0;
+                if (savedSize > 0 && savedSize <= partition->size) {
+                    exactSize = savedSize;
+                }
+            }
+            file.close();
+        }
+    }
+
+    AsyncWebServerResponse *response = request->beginResponse(
+        "application/octet-stream", exactSize,
+        [partition, exactSize](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
+            size_t toRead = maxLen;
+            if (index + toRead > exactSize) {
+                toRead = exactSize - index;
+            }
+            if (toRead > 0) {
+                esp_partition_read(partition, index, buffer, toRead);
+            }
+            return toRead;
+        }
+    );
+    response->addHeader("Access-Control-Allow-Origin", "*"); 
+
+    response->addHeader("Content-Disposition", "attachment; filename=bluetooth_backup.bin");
+
+    request->send(response);
+});
+#endif
 }

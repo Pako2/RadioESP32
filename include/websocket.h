@@ -1,4 +1,6 @@
 const char *WSTAG = "websocket"; // For debug lines
+
+
 void procMsg(AsyncWebSocketClient *client, size_t sz)
 {
   JsonDocument root;
@@ -9,8 +11,8 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
   if (error)
   {
     ESP_LOGW(WSTAG, "Couldn't parse WebSocket message");
-    free(client->_tempObject);
-    client->_tempObject = NULL;
+    //free(client->_tempObject);
+    //client->_tempObject = NULL;
     return;
   }
   const char *command = root["command"];
@@ -25,16 +27,31 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
     f = LittleFS.open("/config.json", FILE_WRITE);
     if (f)
     {
+      //serializeJsonPretty(root, Serial);
       vTaskDelay(5 / portTICK_PERIOD_MS);
       serializeJsonPretty(root, f);
       f.close();
       shouldReboot = true;
     }
+
+  }
+  else if (strcmp(command, "binaries") == 0)
+  {
+    sendBinaries(client);
+  }
+  else if (strcmp(command, "config_req") == 0)
+  {
+    config_req = true;
+  }
+  else if (strcmp(command, "jumptoupman") == 0)
+  {
+    jumptoupman();
   }
   else if (strcmp(command, "status") == 0)
   {
     sendStatus(client);
   }
+
   else if (strcmp(command, "pmode") == 0)
   {
     if (STAmode)
@@ -55,27 +72,24 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
       sendStatus(client);
     }
   }
+
+
   else if (strcmp(command, "radio") == 0)
   {
     if (pmode != PM_RADIO)
     {
-      #if AUDIO_RUNTIME
-      audio->stopSong();
-      #else
       audio.stopSong();
-      #endif
       pmode = PM_RADIO;
       setMutepin(0, true);
-#if defined(DISP)
       clearIcons(2);
       drawIcon(PI_RADIO);
       prgrssbar(0, true);
       clearLines();
-#endif
       setPreset(reqpreset);
     }
     sendRadio();
   }
+
   else if (strcmp(command, "restart") == 0)
   {
     shouldReboot = true;
@@ -84,11 +98,13 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
   {
     formatreq = true;
   }
+
   else if (strcmp(command, "test") == 0)
   {
     const char *url = root["url"];
     testUrl(url);
   }
+
 #if defined(BATTERY)
   else if (strcmp(command, "getadcbat") == 0)
   {
@@ -96,25 +112,22 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
     sendadcbat(val);
   }
 #endif
+
   else if (strcmp(command, "volume") == 0)
   {
     reqvol = root["volume"];
-    #if AUDIO_RUNTIME
-    audio->setVolume(reqvol);
-    #else
     audio.setVolume(reqvol);
-    #endif
-#if defined(DISP)
     changeDispMode(DSP_RADIO);
     volumebar(reqvol);
-#endif
   }
+
 #if defined(AUTOSHUTDOWN)
   else if (strcmp(command, "shutdown") == 0)
   {
     ESP_LOGW(WSTAG, "Shutdown command");
     pwoff_req = true;
   }
+
   else if (strcmp(command, "schedpwoff") == 0)
   {
     uint8_t val = root["val"];
@@ -123,42 +136,34 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
       ESP_LOGW(WSTAG, "Automatic shutdown occurs after %i minutes", pwoffminutes);
       time(&now);
       pwofftime = now + 60 * val;
-#if defined(DISP)
       if (dispmode == DSP_CLOCK)
       {
         changeDispMode(DSP_PWOFF);
       }
-#endif
     }
     else
     {
       pwofftime = 0;
       pwoffminutes = config->dasd;
       ESP_LOGW(WSTAG, "Automatic shutdown mode canceled !");
-#if defined(DISP)
       dispmode = DSP_OTHER;
       changeDispMode(DSP_CLOCK);
-#endif
     }
   }
 #endif
+
   else if (strcmp(command, "treble") == 0)
   {
     int8_t treble = root["treble"];
-    #if AUDIO_RUNTIME
-    audio->setTone(0, 0, treble);
-    #else
     audio.setTone(0, 0, treble);
-    #endif
   }
   else if (strcmp(command, "mute") == 0)
   {
-#if defined(DISP)
     changeDispMode(DSP_RADIO);
-#endif
     muteflag = root["mute"];
     mute(0);
   }
+
   else if (strcmp(command, "scan") == 0)
   {
     wifi_mode_t wm = WiFi.getMode();
@@ -184,19 +189,7 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
     if (configFile)
     {
       size_t len = configFile.size();
-/*
-            char* jsonBuffer = (char*)heap_caps_malloc(len + 1, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-            if (jsonBuffer != nullptr)
-            {     
-                AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer((uint8_t*)jsonBuffer, len);
-                if (buffer)
-                {
-                    configFile.readBytes((char *)buffer->get(), len + 1);
-                    client->text(buffer);
-                }
-                heap_caps_free(jsonBuffer);
-            }
-*/
+
       AsyncWebSocketMessageBuffer *buffer = weso.makeBuffer(len);
       if (buffer)
       {
@@ -206,19 +199,16 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
       configFile.close();
     }
   }
+
   else if (strcmp(command, "steppreset") == 0)
   {
-#if defined(DISP)
     changeDispMode(DSP_RADIO);
-#endif
     int8_t val = root["val"];
     updatePreset(val, true);
   }
   else if (strcmp(command, "preset") == 0)
   {
-#if defined(DISP)
     changeDispMode(DSP_RADIO);
-#endif
     uint16_t prst = root["preset"];
     setPreset(prst - 1);
   }
@@ -243,36 +233,24 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
   }
   else if (strcmp(command, "steptrack") == 0)
   {
-#if defined(DISP)
     changeDispMode(DSP_RADIO);
-#endif
     int8_t val = root["val"];
     updateTrack(val);
   }
   else if (strcmp(command, "seek") == 0)
   {
-#if defined(DISP)
     changeDispMode(DSP_RADIO);
-#endif
     int8_t val = root["val"];
-    #if AUDIO_RUNTIME
-    audio->setTimeOffset(config->seekstep * val);
-    #else
     audio.setTimeOffset(config->seekstep * val);
-    #endif
   }
   else if (strcmp(command, "playpause") == 0)
   {
-#if defined(DISP)
     changeDispMode(DSP_RADIO);
-#endif
     pausePlay();
   }
   else if (strcmp(command, "rndloop") == 0)
   {
-#if defined(DISP)
     changeDispMode(DSP_RADIO);
-#endif
     if (root["val"] == 0)
     {
       Random();
@@ -284,55 +262,26 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
   }
   else if (strcmp(command, "position") == 0)
   {
-#if defined(DISP)
     changeDispMode(DSP_RADIO);
-#endif
     uint32_t pos = root["position"].as<uint32_t>();
-    #if AUDIO_RUNTIME
-    audio->setAudioPlayTime(pos);
-    #else
     audio.setAudioPlayTime(pos);
-    #endif
   }
   else if (strcmp(command, "stop") == 0)
   {
-#if defined(DISP)
     changeDispMode(DSP_RADIO);
-#endif
-    #if AUDIO_RUNTIME
-    audio->stopSong();
-    #else
     audio.stopSong();
-    #endif
-#if defined(DISP)
     drawIcon(PI_STOP);
-#endif
     setMutepin(1, true);
     sendSDstat(0);
-#if defined(DISP)
     prgrssbar(0, false);
-    // prgrssbar(0, true);
-#endif
   }
   else if (strcmp(command, "track") == 0)
   {
-#if defined(DISP)
     changeDispMode(DSP_RADIO);
-#endif
     SD_ix = root["track"];
     setTrack(SD_ix);
   }
 #endif
-  else if (strcmp(command, "loginpassw") == 0)
-  {
-    const char *login = root["login"].as<const char *>();
-    char passw[33];
-    decodeB64(root["passw"].as<const char *>(), passw);
-    bool valid = (strcmp(login, http_username) == 0) && (strcmp(passw, http_password) == 0);
-    sendLoginpassw(client, valid);
-  }
-  free(client->_tempObject);
-  client->_tempObject = NULL;
 }
 
 // Handles WebSocket Events
@@ -351,43 +300,56 @@ void onWsEvent(AsyncWebSocket *server_, AsyncWebSocketClient *client, AwsEventTy
   {
     ESP_LOGW(WSTAG, "Websocket [%s] client [%u] disconnect", server_->url(), client->id());
   }
-
   else if (type == WS_EVT_DATA)
   {
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
-    uint64_t index = info->index;
-    uint64_t infolen = info->len;
-    if (info->final && info->index == 0 && infolen == len)
+    
+// For the entire message (even if it consists of multiple parts) we need to know the global position:
+// info->index is the position in the current frame, info->num is the frame number.
+// The library provides an absolute index within the entire message in info->index,
+// if we read the message sequentially.
+    
+    if (info->final && info->index == 0 && info->len == len)
     {
-// the whole message is in a single frame and we got all of it's data
+      // the whole message is in a single frame and we got all of it's data
       client->_tempObject = ps_malloc(len);
       if (client->_tempObject != NULL)
       {
         memcpy((uint8_t *)(client->_tempObject), data, len);
+        procMsg(client, len);
       }
-      procMsg(client, infolen);
     }
     else
     {
       // message is comprised of multiple frames or the frame is split into multiple packets
-      if (index == 0)
+      if (info->index == 0)
       {
+        // At the very beginning of the transmission (first packet of the first frame)
+        // we allocate memory for the ENTIRE message (info->len)
+
         if (info->num == 0 && client->_tempObject == NULL)
+        //if (client->_tempObject == NULL)
         {
-          client->_tempObject = ps_malloc(infolen);
+          client->_tempObject = ps_malloc(info->len);
         }
       }
+      
+      // Secure writing to an absolute index within the entire message
       if (client->_tempObject != NULL)
       {
-        memcpy((uint8_t *)(client->_tempObject) + index, data, len);
+        // info->index for multiframe messages represents the global offset from the start of the message
+        memcpy((uint8_t *)(client->_tempObject) + info->index, data, len);
       }
-      if ((index + len) == infolen)
+      
+      // If we are at the end of the whole message ...
+      if ((info->index + len) == info->len)
       {
         if (info->final)
         {
-          procMsg(client, infolen);
+          procMsg(client, info->len);
         }
       }
     }
   }
 }
+

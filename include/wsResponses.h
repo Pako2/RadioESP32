@@ -1,5 +1,18 @@
 const char *WSRTAG = "wsResponses"; // For debug lines
 
+
+uint32_t getPartSize()
+{
+	uint32_t partSize = 0;
+	const esp_partition_t* running_partition = esp_ota_get_running_partition();
+  
+	if (running_partition != NULL)
+	{
+    	partSize = running_partition->size;
+	}
+	return partSize;
+}
+
 void sendJsonToClient(AsyncWebSocketClient *cl, JsonDocument &root)
 {
     if (cl != nullptr && cl->status() == WS_CONNECTED)
@@ -73,14 +86,14 @@ void setSystemTime(const char *tz, time_t epch)
 
 deviceUptime getDeviceUptime()
 {
-	uint64_t currentsecs = esp_timer_get_time() / 1000000;
-	deviceUptime uptime;
-	uptime.secs = (uint8_t)(currentsecs % 60);
-	uptime.mins = (uint8_t)((currentsecs / 60) % 60);
-	uptime.hours = (uint8_t)((currentsecs / 3600) % 24);
-	uptime.days = (uint8_t)((currentsecs / 86400) % 7);
-	uptime.weeks = (uint32_t)((currentsecs / 604800));
-	return uptime;
+    uint64_t currentsecs = esp_timer_get_time() / 1000000;
+    deviceUptime uptime;
+    uptime.secs  = (uint8_t)(currentsecs % 60);
+    uptime.mins  = (uint8_t)((currentsecs / 60) % 60);
+    uptime.hours = (uint8_t)((currentsecs / 3600) % 24);
+    uptime.days  = (uint8_t)((currentsecs / 86400) % 7);
+    uptime.weeks = (uint32_t)(currentsecs / 604800); // Tady klidně nechte uint32_t
+    return uptime;
 }
 
 void getDeviceUptimeString(char *uptimestr)
@@ -96,13 +109,54 @@ void IPtoChars(IPAddress adress, char *ipadress)
 
 void sendHeartBeat()
 {
-
 	JsonDocument root;
 	root["command"] = "heartbeat";
 	root["messageid"] = ++messageid;
     if (weso.count() > 0)
 	{
         sendJsonToAll(root, true);
+	}
+}
+
+void sendConfig_req()
+{
+	JsonDocument root;
+	root["command"] = "config_req";
+    if (weso.count() > 0)
+	{
+        sendJsonToAll(root, true);
+	}
+}
+
+void sendJump(uint8_t target)
+{
+	JsonDocument root;
+	root["command"] = "jump";
+	root["target"] = target;
+    if (weso.count() > 0)
+	{
+        sendJsonToAll(root, true);
+	}
+}
+
+void sendBinaries(AsyncWebSocketClient *cl)
+{
+	File bins = LittleFS.open("/binaries.json", "r");
+	if (bins)
+	{
+		JsonDocument root;
+		root["command"] = "binaries";
+		// Handle potential JSON corruption or invalid data formats
+		DeserializationError error = deserializeJson(root["binaries"], bins);
+		bins.close();
+		if (error)
+		{
+			ESP_LOGW(WSRTAG, "File binaries.json contains invalid JSON data. ToDo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+		}
+		if (cl != NULL)
+		{
+			sendJsonToClient(cl, root);
+		}
 	}
 }
 
@@ -141,7 +195,7 @@ void sendStatus(AsyncWebSocketClient *cl)
 		root["chipmodel"] = charchipmodel;
 		root["cpu"] = ESP.getCpuFreqMHz();
 		root["sketchsize"] = ESP.getSketchSize();
-		root["partsize"] = ESP.getFreeSketchSpace(); // esp library bug !
+		root["partsize"] = getPartSize(); // esp library bug !
 		root["availspiffs"] = totalBytes - usedBytes;
 		root["spiffssize"] = totalBytes;
 		root["psramsize"] = totalPsram;
@@ -313,24 +367,15 @@ void sendWebConfig(AsyncWebSocketClient *cl)
 #else
 		root["autoshutdown"] = false;
 #endif
-		bool ota = false;
 		bool oled = false;
 		bool disp = false;
-#if defined(OTA)
-		ota = OTA;
-#endif
-		root["ota"] = ota;
 #if defined(SDCARD)
 		root["sdcard"] = true;
 		root["sdready"] = SD_okay;
 #else
 		root["sdcard"] = false;
 #endif
-#if defined(DISP)
 		root["disp"] = true;
-#else
-		root["disp"] = false;
-#endif
 #if defined(BATTERY)
         root["battery"] = true;
 #else
@@ -354,7 +399,6 @@ void sendWebConfig(AsyncWebSocketClient *cl)
 				break;
 			}
 		}
-
 		sendJsonToClient(cl, root);
 	}
 }
@@ -405,17 +449,6 @@ void sendTime(AsyncWebSocketClient *cl)
 		root["command"] = "gettime";
 		root["epoch"] = (long long int)now_;
 		root["tzoffset"] = getTZoffset(now_);
-		sendJsonToClient(cl, root);
-	}
-}
-
-void  sendLoginpassw(AsyncWebSocketClient *cl, bool valid)
-{
-	if (cl != NULL)
-	{
-		JsonDocument root;
-		root["command"] = "loginpassw";
-		root["valid"] = valid;
 		sendJsonToClient(cl, root);
 	}
 }
@@ -566,7 +599,6 @@ void sendAsd(AsyncWebSocketClient *cl)
                 sendJsonToClient(cl, root);
 			}
 		}
-
 	}
 }
 #endif

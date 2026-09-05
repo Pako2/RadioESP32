@@ -1,6 +1,5 @@
 struct Config {
 	bool default_ = 1;
-//	uint8_t defvol = 16;
 	uint8_t defvol = 50;
 	int8_t bass = 0;
 	int8_t mid = 0;
@@ -32,12 +31,10 @@ struct Config {
 	uint8_t bclkpin = 255;
 	uint8_t doutpin = 255;
 	uint8_t wspin = 255;
-#if defined(DISP)
 	uint8_t dsptype = 128;
 	uint8_t angle = 0;
 	uint8_t bckpin = 255;
 	uint8_t bckinv = 0;
-#endif
 	uint8_t extpullup = 0;
 #if defined(SDCARD)
 	uint8_t sdpullup = 0;
@@ -53,8 +50,12 @@ struct Config {
 	uint8_t onoffopin = 255;
 	uint8_t dasd = 20;
 #endif
+    uint8_t btauto = 1;
+    uint8_t btaction = 1;
+    uint16_t btcount = 32;
     IPAddress apaddress = {192, 168, 4, 1};
     IPAddress apsubnet = {255, 255, 255, 0};
     char apssid[33] = "RadioESP32";
-    char wdays[7][24];
+    char btname[33] = "RadioESP32";
+    char wdays[7][24] = {"Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"};
 };

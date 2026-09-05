@@ -5,7 +5,7 @@
 # License: Apache
 # Expanded from functionality provided by PlatformIO's espressif32 and espressif8266 platforms, credited below.
 # This script provides functions to download the filesystem (LittleFS) from a running ESP32 / ESP8266
-# over the serial bootloader using esptool.py, and mklittlefs for extracting.
+# over the serial bootloader using esptool, and mklittlefs for extracting.
 # run by either using the VSCode task "Custom" -> "Download Filesystem"
 # or by doing 'pio run -t downloadfs' (with optional '-e <environment>') from the commandline.
 # output will be saved, by default, in the "unpacked_fs" of the project.
@@ -27,7 +27,8 @@ Import("env")
 platform = env.PioPlatform()
 board = env.BoardConfig()
 mcu = board.get("build.mcu", "esp32")
-
+current_env = env.subst("$PIOENV")
+unpacked_fs = os.path.join('filesystems', current_env)
 
 mkspiffstool = join(os.path.dirname(os.path.realpath('__file__')), 'scripts\\mklittlefs.exe')
 
@@ -160,7 +161,7 @@ def parse_partition_table(content):
             env["FS_BLOCK"] = int("0x1000", 16)
 
 def get_partition_table():
-    esptoolpy = join(platform.get_package_dir("tool-esptoolpy") or "", "esptool.py")
+    esptoolpy = join(platform.get_package_dir("tool-esptoolpy") or "", "esptool")
     upload_port = join(env.get("UPLOAD_PORT", "none"))
     download_speed = join(str(board.get("download.speed", "115200")))
     if "none" in upload_port:
@@ -171,9 +172,9 @@ def get_partition_table():
             "--chip", mcu,
             "--port", upload_port,
             "--baud",  download_speed,
-            "--before", "default_reset",
-            "--after", "hard_reset",
-            "read_flash",
+            "--before", "default-reset",
+            "--after", "hard-reset",
+            "read-flash",
             "0x8000",
             "0x1000",
             fs_file
@@ -214,7 +215,7 @@ def get_fs_type_start_and_length():
 
 def download_fs(fs_info: FSInfo):
     print(fs_info)
-    esptoolpy = join(platform.get_package_dir("tool-esptoolpy") or "", "esptool.py")
+    esptoolpy = join(platform.get_package_dir("tool-esptoolpy") or "", "esptool")
     upload_port = join(env.get("UPLOAD_PORT", "none"))
     download_speed = join(str(board.get("download.speed", "115200")))
     if "none" in upload_port:
@@ -225,9 +226,9 @@ def download_fs(fs_info: FSInfo):
             "--chip", mcu,
             "--port", upload_port,
             "--baud",  download_speed,
-            "--before", "default_reset",
-            "--after", "hard_reset",
-            "read_flash",
+            "--before", "default-reset",
+            "--after", "hard-reset",
+            "read-flash",
             hex(fs_info.start),
             hex(fs_info.length),
             fs_file
@@ -244,7 +245,8 @@ def download_fs(fs_info: FSInfo):
 def unpack_fs(fs_info: FSInfo, downloaded_file: str):
     # by writing custom_unpack_dir = some_dir in the platformio.ini, one can
     # control the unpack directory
-    unpack_dir = env.GetProjectOption("custom_unpack_dir", "unpacked_fs")
+    #unpack_dir = env.GetProjectOption("custom_unpack_dir", "unpacked_fs")
+    unpack_dir = env.GetProjectOption("custom_unpack_dir", unpacked_fs)
     if not os.path.exists(downloaded_file):
         print(f"ERROR: {downloaded_file} with filesystem not found, maybe download failed due to download_speed setting being too high.")
         assert(0)
@@ -280,14 +282,14 @@ def command_download_fs(*args, **kwargs):
 
 
 def reset_target(*args, **kwargs):
-    esptoolpy = join(platform.get_package_dir("tool-esptoolpy") or "", "esptool.py")
+    esptoolpy = join(platform.get_package_dir("tool-esptoolpy") or "", "esptool")
     upload_port = join(env.get("UPLOAD_PORT", "none"))
     if "none" in upload_port:
         env.AutodetectUploadPort()
         upload_port = join(env.get("UPLOAD_PORT", "none"))
     esptoolpy_flags = [
         "--no-stub",
-        "--after", "hard_reset",
+        "--after", "hard-reset",
         "--chip", mcu,
         "--port", upload_port,
         "flash_id"
@@ -298,7 +300,7 @@ def reset_target(*args, **kwargs):
 
 
 def factory_reset(*args, **kwargs):
-    esptoolpy = join(platform.get_package_dir("tool-esptoolpy") or "", "esptool.py")
+    esptoolpy = join(platform.get_package_dir("tool-esptoolpy") or "", "esptool")
     upload_port = join(env.get("UPLOAD_PORT", "none"))
     if "none" in upload_port:
         env.AutodetectUploadPort()
@@ -315,7 +317,8 @@ def factory_reset(*args, **kwargs):
     subprocess.call(esptoolpy_cmd, shell=False)
 
 def build_webh_files(*args, **kwargs):
-    unpackeddir = "unpacked_fs"
+    #unpackeddir = "unpacked_fs"
+    unpackeddir = unpacked_fs
     with open(unpackeddir+"/radioesp32.js","rb") as f:
         ordinary = f.read()
     minif =rjsmin.jsmin(ordinary)
@@ -334,7 +337,7 @@ def build_webh_files(*args, **kwargs):
             j=0
     res = res[:-1]
     res+=bytes("\n};", 'utf8')
-    with open('include/webh/radioesp32.js.gz.h', 'wb') as wb_writer:
+    with open('include/webh/'+current_env+'/radioesp32.js.gz.h', 'wb') as wb_writer:
         wb_writer.write(res)
 
 
@@ -356,7 +359,7 @@ def build_webh_files(*args, **kwargs):
             j=0
     res = res[:-1]
     res+=bytes("\n};", 'utf8')
-    with open('include/webh/required.js.gz.h', 'wb') as wb_writer:
+    with open('include/webh/'+current_env+'/required.js.gz.h', 'wb') as wb_writer:
         wb_writer.write(res)
     
 
@@ -378,7 +381,7 @@ def build_webh_files(*args, **kwargs):
             j=0
     res = res[:-1]
     res+=bytes("\n};", 'utf8')
-    with open('include/webh/index.html.gz.h', 'wb') as wb_writer:
+    with open('include/webh/'+current_env+'/index.html.gz.h', 'wb') as wb_writer:
         wb_writer.write(res)
 
 
@@ -401,7 +404,7 @@ def build_webh_files(*args, **kwargs):
             j=0
     res = res[:-1]
     res+=bytes("\n};", 'utf8')
-    with open('include/webh/radioesp32.html.gz.h', 'wb') as wb_writer:
+    with open('include/webh/'+current_env+'/radioesp32.html.gz.h', 'wb') as wb_writer:
         wb_writer.write(res)
 
 
@@ -424,7 +427,7 @@ def build_webh_files(*args, **kwargs):
             j=0
     res = res[:-1]
     res+=bytes("\n};", 'utf8')
-    with open('include/webh/required.css.gz.h', 'wb') as wb_writer:
+    with open('include/webh/'+current_env+'/required.css.gz.h', 'wb') as wb_writer:
         wb_writer.write(res)
 
 
@@ -446,59 +449,130 @@ def build_webh_files(*args, **kwargs):
             j=0
     res = res[:-1]
     res+=bytes("\n};", 'utf8')
-    with open('include/webh/glyphicons-halflings-regular.woff.gz.h', 'wb') as wb_writer:
+    with open('include/webh/'+current_env+'/glyphicons-halflings-regular.woff.gz.h', 'wb') as wb_writer:
         wb_writer.write(res)
 
 def down_and_build_webh(*args, **kwargs):
     command_download_fs(args, kwargs)
     build_webh_files(args, kwargs)
 
-env.AddCustomTarget(
-    name="reset_target",
-    dependencies=None,
-    actions=[
-        reset_target
-    ],
-    title="Hard reset ESP32 (using RTS !)",
-    description="This command resets ESP32x target via esptoolpy",
-)
+def upload_custom_app(*args, **kwargs):
+    
+    prefixes = {"radio_app":"radio", "btls_app":"bluetooth", "menu_app":"upman"}
+    version="UNKNOWN"
+    for item in env["BUILD_FLAGS"]:
+        ix = item.find("VERSION=")
+        if ix > 0:
+            version = item[ix+8:]
+            break
+    bin_dir = os.path.join('bin', current_env)
+    bin_path = os.path.join(bin_dir, '%s_v%s.bin' % (prefixes[current_env], version))
+    
+    # We determine which partition we are looking for in the table based on the active environment
+    SubTypes = {"menu_app":"factory", "radio_app":"app0", "btls_app":"app1"}
+    target_partition_name = SubTypes[current_env] if current_env in SubTypes else "app0"
+    part_table = env.subst("$PARTITIONS_TABLE_CSV")
+    
+    offset = None
+    
+    with open(part_table) as pt:
+        for line in pt.readlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.startswith(target_partition_name):
+                offset = line.split(",")[3].strip()
+                break
+
+    if not offset:
+        print(f"\n>>>>>>>>>>>>>>>> [ERROR] Could not find offset for partition: {target_partition_name} <<<<<<<<<<<<<<<<\n")
+        return
+
+    board = env.BoardConfig()
+    mcu = board.get("build.mcu", "esp32")
+    platform = env.PioPlatform()
+    esptoolpy = join(platform.get_package_dir("tool-esptoolpy") or "", "esptool")
+    
+    upload_port = join(env.get("UPLOAD_PORT", "none"))
+    if "none" in upload_port:
+        env.AutodetectUploadPort()
+        upload_port = join(env.get("UPLOAD_PORT", "none"))
+        
+    #bin_path = f"bin\\{current_env}\\firmware.bin"
+
+    print(f"\n>>>>>>>>>>>>>>>> [CUSTOM UPLOAD] Uploading {current_env} to {offset} <<<<<<<<<<<<<<<<")
+
+    esptoolpy_flags = [
+        "--no-stub",
+        "--chip", mcu,
+        "--port", upload_port,
+        "--baud", "460800",
+        "write-flash", "-z",
+        "--flash-mode", "dout",
+        "--flash-freq", "80m",
+        offset, bin_path
+    ]
+    
+    esptoolpy_cmd = [env["PYTHONEXE"], esptoolpy] + esptoolpy_flags
+    subprocess.call(esptoolpy_cmd, shell=False)   
+
+print("================================= current env = %s =================================" % current_env)
+if current_env in ["radio_app", "menu_app"]:
+
+    env.AddCustomTarget(
+        name="reset_target",
+        dependencies=None,
+        actions=[
+            reset_target
+        ],
+        title="Hard reset ESP32 (using RTS !)",
+        description="This command resets ESP32x target via esptoolpy",
+    )
+
+    env.AddCustomTarget(
+        name="factory_reset",
+        dependencies=None,
+        actions=[
+            factory_reset
+        ],
+        title="Factory reset ESP32",
+        description="This command will perform a Factory Reset (erase the Flash Memory)",
+    )
+
+    env.AddCustomTarget(
+        name="downloadfs",
+        dependencies=None,
+        actions=[
+            command_download_fs
+        ],
+        title="Download Filesystem",
+        description="Downloads and displays files stored in the filesystem ESP32/ESP8266"
+    )
+
+    env.AddCustomTarget(
+        name="buildwebh",
+        dependencies=None,
+        actions=[
+            build_webh_files
+        ],
+        title="Create WEBH Files",
+        description="Converts data (downloaded to unpacked_fs dir) to WEBH files"
+    )
+
+    env.AddCustomTarget(
+        name="downloadfsandbuild",
+        dependencies=None,
+        actions=[
+            down_and_build_webh
+        ],
+        title="Download FS & Create WEBH",
+        description="Downloads FS files and converts data to WEBH files"
+    )
 
 env.AddCustomTarget(
-    name="factory_reset",
+    name="upload_custom_app",
     dependencies=None,
-    actions=[
-        factory_reset
-    ],
-    title="Factory reset ESP32",
-    description="This command will perform a Factory Reset (erase the Flash Memory)",
-)
-
-env.AddCustomTarget(
-    name="downloadfs",
-    dependencies=None,
-    actions=[
-        command_download_fs
-    ],
-    title="Download Filesystem",
-    description="Downloads and displays files stored in the filesystem ESP32/ESP8266"
-)
-
-env.AddCustomTarget(
-    name="buildwebh",
-    dependencies=None,
-    actions=[
-        build_webh_files
-    ],
-    title="Create WEBH Files",
-    description="Converts data (downloaded to unpacked_fs dir) to WEBH files"
-)
-
-env.AddCustomTarget(
-    name="downloadfsandbuild",
-    dependencies=None,
-    actions=[
-        down_and_build_webh
-    ],
-    title="Download FS & Create WEBH",
-    description="Downloads FS files and converts data to WEBH files"
+    actions=[upload_custom_app],
+    title='Upload custom binary',
+    description='Uploads binary to the specific partition offset'
 )

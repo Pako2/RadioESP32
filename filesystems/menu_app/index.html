@@ -33,7 +33,7 @@
     height: 16px;
     line-height: 1;
     vertical-align: -3px;
-    margin-right: 12px;
+    margin-right: 17px;
     }
   </style>
 </head>
@@ -52,57 +52,24 @@
                 <h1>RadioESP32</h1>
             </div>
             <ul class="list-unstyled components" style="margin-top: -30px;">
-                <li class="active">
-                    <a href="#" id="control"><i class="glyphicon glyphicon-music"></i>Radio Player</a>
-                </li>
-                <li style="display:none;" id="sdctrl">
-                    <a href="#" id="sdcontrol"><i class="glyphicon glyphicon-sd-video"></i>SD Card Player</a>
+                <li>
+                        <a href="#" id="updman"><i class="glyphicon glyphicon-open"></i>Update Manager</a>
                 </li>
                 <li>
+                        <a href="#" id="jump1"><i class="glyphicon glyphicon-globe"></i>Jump to Radio app</a>
+                </li>
+                <li>
+                        <a href="#" id="jump2"><i class="glyphicon custom-icon-bt"></i>Jump to Bluetooth app</a>
+                </li>
+                <li>
+                        <a href="#" id="backup"><i class="glyphicon glyphicon-floppy-disk"></i>Backup & Restore</a>
+                </li>
+                <li>
+                        <a href="#" id="pwoffreq"><i class="glyphicon glyphicon-off"></i>Shutdown</a>
+                </li>
+                <li class="active">
                     <a href="#" id="status"><i class="glyphicon glyphicon-info-sign"></i>Status</a>
                 </li>
-                <li id="dropdown">
-                    <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false"><i  class="glyphicon glyphicon-cog"></i>Settings</a>
-                    <ul class="collapse list-unstyled" id="homeSubmenu">
-                        <li>
-                            <a href="#" id="radio"><i class="glyphicon glyphicon-globe"></i>Radio Settings</a>
-                        </li>
-                        <li style="display:none;" id="sdcfg">
-                            <a href="#" id="sd"><i class="glyphicon glyphicon-transfer"></i>SD Player Settings</a>
-                        </li>
-                        <li>
-                            <a href="#" id="bt"><i class="glyphicon custom-icon-bt"></i>Bluetooth Settings</a>
-                        </li>
-                        <li>
-                            <a href="#" id="network"><i class="glyphicon glyphicon-signal"></i>Network Settings</a>
-                        </li>
-                        <li>
-                            <a href="#" id="hardware"><i class="glyphicon glyphicon-wrench"></i>Hardware Settings</a>
-                        </li>
-                        <li>
-                            <a href="#" id="irremote"><i class="glyphicon glyphicon-flash"></i>IR Remote Settings</a>
-                        </li>
-                        <li style="display:none;" id="disp">
-                            <a href="#" id="display"><i class="glyphicon glyphicon-tasks"></i>Display Settings</a>
-                        </li>
-                        <li>
-                            <a href="#" id="general"><i class="glyphicon glyphicon-list-alt"></i>General Settings</a>
-                        </li>
-                        <li>
-                            <a href="#" id="ntp"><i class="glyphicon glyphicon-hourglass"></i>NTP (Time) Settings</a>
-                        </li>
-                    </ul>
-                </li>
-                <li>
-                    <li>
-                        <a href="#" id="backup"><i class="glyphicon glyphicon-floppy-disk"></i>Backup & Restore</a>
-                    </li>
-                    <li>
-                        <a href="#" id="reset"><i class="glyphicon glyphicon-repeat"></i>Factory Reset</a>
-                    </li>
-                    <li>
-                        <a href="#" id="checkupd"><i class="glyphicon glyphicon-open"></i>Check for updates</a>
-                    </li>
             </ul>
             <ul class="list-unstyled CTAs">
                 <li>
@@ -152,7 +119,7 @@
                     </div>
                 </div>
             </div>
-            <div id="destroy" class="modal fade" role="dialog">
+            <div id="pwoff" class="modal fade" role="dialog">
                 <div class="modal-dialog">
                     <!-- Modal content-->
                     <div class="modal-content">
@@ -160,37 +127,49 @@
                             <button type="button" class="close" data-dismiss="modal">&times;</button>
                             <h4 class="modal-title">Are you absolutely sure?</h4>
                         </div>
-                        <div class="alert alert-warning">
-                            <h5><strong>Warning!</strong> Unexpected bad things will happen if you don’t read this!</h5>
-                        </div>
                         <div class="modal-body">
                             <h5>
-                                This action <strong>cannot</strong> be undone. This will permanently delete <strong>all settings.</strong> Please make sure you made a backup first.
+                                This action <strong>cannot</strong> be undone. The connection will be lost. Power must be turned back on manually.
                             </h5>
-                            <div style="clear:both;">
-                                <br>
-                            </div>
-                            <h5>Please type in the hostname of the device to confirm.</h5>
-                            <div style="clear:both;">
-                                <br>
-                            </div>
-                            <p>
-                                <input type="text" class="form-control input-block" id="compare" oninput="compareDestroy()">
-                            </p>
                         </div>
                         <div class="modal-footer">
-                            <button id="destroybtn" type="button" disabled="" onclick="destroy();" class="btn btn-block btn-danger">I understand the consequences.</button>
+                          <div class="btn-toolbar d-flex flex-row pull-right" role="toolbar" aria-label="Button toolbar">
+                            <button type="button" class="btn btn-danger me-2" onclick="pwoff();" data-dismiss="modal">
+                              Immediate shutdown
+                            </button>
+                            <button type="button" class="btn btn-success" data-dismiss="modal">
+                              Cancel
+                            </button>
+                          </div>
                         </div>
                     </div>
                 </div>
             </div>
-<!-- 
+ 
+            <div id="lowbatt" class="modal fade" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 style="color:#F72D26;" class="modal-title">The battery is almost empty!</h3>
+                        </div>
+                        <div class="modal-body">
+                            <h5>
+                                You must either charge the battery or connect the AC adapter.
+                            </h5>
+                        </div>
+                        <!-- <div class="modal-footer">
+                        </div> -->
+                    </div>
+                </div>
+            </div>
+ 
             <div id="signin" class="modal fade" role="dialog">
                 <div class="modal-dialog">
                     
                     <div class="modal-content">
                         <div class="modal-header">
-                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <!--<button type="button" class="close" data-dismiss="modal">&times;</button>-->
                             <h4 class="modal-title">Please Sign In</h4>
                         </div>
                         <div class="row">
@@ -213,7 +192,94 @@
                     </div>
                 </div>
             </div>
- -->
+ 
+            <div id="update" class="modal fade" role="dialog">
+                <div class="modal-dialog">
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Update Firmware</h4>
+                        </div>
+                        <div class="alert alert-warning">
+                            <strong>Warning!</strong> Please make sure you made a backup first
+                        </div>
+                        <div class="modal-body">
+                            <div style="margin-top:-30px;">
+                                <h4>Latest Version Online</h4>
+                                <div id="onlineupdate">
+                                    <h5 id=releasehead></h5>
+                                    <div style="clear:both;">
+                                        <br>
+                                    </div>
+                                    <!-- <pre id="releasebody">Getting update information from GitHub...</pre> -->
+                                    <div class="pull-right" style="margin-top:-20px;">
+                                        <a class="pull-right">
+                                            <button type="button" class="btn btn-primary" onclick="downloadupdate();" id="downloadupdate">Download</button>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="clear:both;">
+                            </div>
+                            <br>
+                            <div>
+                                <div class="row form-group">
+                                    <label for="name" class="col-sm-3 control-label">Current Version:</label>
+                                    <div class="col-sm-9">
+                                    <input class="form-control input-sm" id="versionhead" type="text" readonly="readonly" style="color:red;">
+                                    </div>
+                                </div>
+                                <div class="row form-group">
+                                  <label class="col-sm-3 control-label">File:</label>
+                                  <div class="col-sm-9">
+                                      <input id="binform" onchange="allowUpload();" type="file" name="update" accept=".bin">
+                                  </div>
+                                </div>
+                                <div class="row form-group">
+                                  <label class="col-sm-3 control-label">Username:</label>
+                                  <div class="col-sm-9">
+                                    <input type="text" class="form-control" id="updlogin" name="updlogin" placeholder="Login" onchange="allowUpload();" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" required>
+                                  </div>
+                                </div>
+                                <div class="row form-group">
+                                  <label class="col-sm-3 control-label">Password:</label>
+                                  <div class="col-sm-9">
+                                    <input type="password" class="form-control" id="updpassw" name="updpassw" placeholder="Password" onchange="allowUpload();" onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();" required>
+                                  </div>
+                                </div>                                
+                                <div class="pull-right">
+                                    <button onclick="upload();" class="btn btn-primary" id="upbtn" disabled="">Update</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="clear:both;">
+                            <br>
+                        </div>
+                        <div class="modal-footer">
+                        </div>
+                    </div>
+                </div>
+            </div>
+<div class="modal fade" id="customModal" tabindex="-1" role="dialog" aria-labelledby="customModalLabel">
+  <div class="modal-dialog modal-sm" role="dialog"> <!-- modal-sm is ideal for phone -->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="customModalLabel">Warning</h4>
+      </div>
+      <div class="modal-body" id="customModalBody" style="white-space: pre-line;">
+        Message...
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" id="customModalConfirmBtn">OK</button>
+        <button type="button" class="btn btn-default" id="customModalCancelBtn" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 
         </div>
         <footer class="footer">

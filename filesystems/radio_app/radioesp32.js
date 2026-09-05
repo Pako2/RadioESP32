@@ -81,7 +81,6 @@ function volume(val, source)
   $('#volume').val(val);
   $('#volume1').html(val);
   if (source===1)
-  //{websock.send("{\"command\":\"volume\",\"volume\":"+val+"}");}
   {sendMessage("{\"command\":\"volume\",\"volume\":"+val+"}");}
 }
 
@@ -124,7 +123,6 @@ function defautoshutdown(val)
   $('#dasd').val(val);
   $('#dasd1').html(val);
 }
-
 
 function stepitem(val)
 {
@@ -367,8 +365,8 @@ function listupdmanager(obj)
 
 var repoUrl = "/Pako2/RadioESP32"; 
 // Base URL for download latest files from GitHub: 
-//var downloadBaseUrl = "https://github.com" + repoUrl + "/releases/latest/download/"; // for live operation 
-var downloadBaseUrl = "http://localhost" + "/releases/latest/download/";               // for testing purposes only! //
+var downloadBaseUrl = "https://github.com" + repoUrl + "/releases/latest/download/"; // for live operation 
+//var downloadBaseUrl = "http://localhost" + "/releases/latest/download/";               // for testing purposes only! //
 
     // GLOBAL VARIABLES WITHIN THIS FUNCTION
     var radioBinFile = "";
@@ -1112,7 +1110,6 @@ async function listcontrol(rnnng) {
   updateMetadata(0);
 }
 
-
 function readRemoteTable() {
     var irarr = [];
     var ft = FooTable.get("#irtable");
@@ -1147,7 +1144,6 @@ function limitTable(tbl, limit)
 {
    $(".footable-add").prop("disabled", tbl.rows.all.length>=limit);
 }
-
 
 function isNotUnique(tbl, val)
 {
@@ -1434,8 +1430,6 @@ function initRemoteTable(vals) {
     });
 }
 
-
-
 function readNetwTable() {
     var netwarr = [];
     var ft = FooTable.get("#netwtable");
@@ -1626,7 +1620,6 @@ function initNetwTable(vals) {
     });
 }
 
-
 function listnetworkXX(netw) {
 	document.getElementById("inputtohide").value = netw.ssid;
 	document.getElementById("wifipass").value = netw.pswd;
@@ -1683,7 +1676,6 @@ function listgeneral() {
 	document.getElementById("dasd").value = config.general.dasd.toString();
 	document.getElementById("dasd1").innerText = config.general.dasd.toString();
 }
-
 
 function listbt() {
 	document.getElementById("btname").value = config.bluetooth.btname;
@@ -1806,8 +1798,6 @@ function handleClock() {
 		$("#sunday").slideUp();
 	}
 }
-
-
 
 function listdisplay() {
 	if (DISP)
@@ -2039,6 +2029,10 @@ function restoreSet()
 					if (x)
 					{
 						config = json;
+            if (!config.hasOwnProperty("bluetooth")) //upgrade from version 1.X.X !
+						{
+					    config.bluetooth = {"btname":"RadioESP32","btauto":1,"btcount":32,"btaction":1};
+					  }
 						uncommited();
 					}
 				}
@@ -2605,7 +2599,6 @@ function handleTouchMove(evt) {
 	yDown = null;
 }
 
-
 // Make the function wait until the connection is made...
 function waitForSocketConnection(socket, callback){
     setTimeout(
@@ -2640,7 +2633,6 @@ function connectWS() {
 	websock = null;
 	websock = new WebSocket(wsUri);
 	websock.addEventListener("message", socketMessageListener);
-
 
 websock.onopen = function(evt) {
     // ...
