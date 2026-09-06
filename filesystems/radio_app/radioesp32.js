@@ -364,9 +364,7 @@ function listupdmanager(obj)
     $("#upman-current").html(obj.binaries.upman.version);
 
 var repoUrl = "/Pako2/RadioESP32"; 
-// Base URL for download latest files from GitHub: 
-var downloadBaseUrl = "https://github.com" + repoUrl + "/releases/latest/download/"; // for live operation 
-//var downloadBaseUrl = "http://localhost" + "/releases/latest/download/";               // for testing purposes only! //
+var jsonUrl = "https://raw.githubusercontent.com"+repoUrl+"/refs/heads/main/bin/latest.json";
 
     // GLOBAL VARIABLES WITHIN THIS FUNCTION
     var radioBinFile = "";
@@ -377,7 +375,7 @@ var downloadBaseUrl = "https://github.com" + repoUrl + "/releases/latest/downloa
     var gitUm = "0.0.0";
 
     // 2. Download info-file latest.json
-    $.getJSON(downloadBaseUrl + "latest.json", function(data) {
+    $.getJSON(jsonUrl, function(data) {
         // --- Radio processing ---
         var currentRadio = $("#radio-current").text().replace('v', '').trim();
         gitRadio = data.radio_version.replace('v', '').trim();

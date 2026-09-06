@@ -162,6 +162,7 @@ void sendStatus(AsyncWebSocketClient *cl)
 		}
 		JsonDocument root;
 		root["command"] = "status";
+		root["version"] = STRINGIFY(VERSION);
 		root["heap"] = ESP.getFreeHeap();
 		root["totalheap"] = ESP.getHeapSize();
 		ESP_LOGW(WSRTAG, "Total PSRAM: %d", totalPsram);

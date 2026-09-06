@@ -465,28 +465,6 @@ void jumpToApp(uint8_t app)
     jumpToApp(jump);
     jump = 0;
   }
-#if defined(AUTOSHUTDOWN)
-  if (pwoff_req)
-  {
-    ESP_LOGW(TAG, "It's time to shut down! GOOD BYE.");
-    u8g2.setForegroundColor(TFT_RED);
-    u8g2.setFont(u8g2_font_t0_22_me);
-    u8g2.drawUTF8(2 * CELLWID, HGT - 2 * CELLHGT - 4 + LINEOFFSET, "Bye, bye !");
-    pwoff_req = false;
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
-    powerOff();
-  }
-#endif
-  if (shouldReboot)
-  {
-    ESP_LOGW(TAG, "System is going to reboot ...");
-    tft.fillScreen(TFT_BLACK);
-    u8g2.setCursor(30, 45);
-    u8g2.setForegroundColor(TFT_WHITE);
-    u8g2.print("Reboot ...");
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    ESP.restart();
-  }
 }
 
 //**************************************************************************************************
@@ -608,6 +586,30 @@ void basic_loop()
     u8g2.setBackgroundColor(TFT_BLACK);
     u8g2.setForegroundColor(TFT_WHITE);
     APstart = false;
+  }
+#if defined(AUTOSHUTDOWN)
+  if (pwoff_req)
+  {
+    ESP_LOGW(TAG, "It's time to shut down! GOOD BYE.");
+    tft.fillScreen(TFT_BLACK);
+    u8g2.setForegroundColor(TFT_RED);
+    u8g2.setBackgroundColor(TFT_BLACK);
+    u8g2.setFont(u8g2_font_t0_22_me);
+    u8g2.drawUTF8(2 * CELLWID, HGT - 2 * CELLHGT - 4 + LINEOFFSET, "Bye, bye !");
+    pwoff_req = false;
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    powerOff();
+  }
+#endif
+  if (shouldReboot)
+  {
+    ESP_LOGW(TAG, "System is going to reboot ...");
+    tft.fillScreen(TFT_BLACK);
+    u8g2.setCursor(30, 45);
+    u8g2.setForegroundColor(TFT_WHITE);
+    u8g2.print("Reboot ...");
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    ESP.restart();
   }
 }
 

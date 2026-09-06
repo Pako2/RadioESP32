@@ -112,7 +112,7 @@ server.addHandler(new FS_editor(LittleFS, http_username, http_password));
 #include "LittleFS.h"
 // --- ENDPOINT FOR DOWNLOADING THE EXACT RADIO BACKUP (.BIN) ---
 server.on("/download_radio", HTTP_GET, [](AsyncWebServerRequest *request){
-    if(!request->authenticate("admin", "vasesilneheslo")) {
+    if(!request->authenticate("admin", "kwUghLrp6hKqO72g")) {
         return request->requestAuthentication();
     }
 
@@ -165,7 +165,7 @@ server.on("/download_radio", HTTP_GET, [](AsyncWebServerRequest *request){
 
 // --- ENDPOINT FOR DOWNLOADING THE EXACT BLUETOOTH BACKUP (.BIN) ---
 server.on("/download_bluetooth", HTTP_GET, [](AsyncWebServerRequest *request){
-    if(!request->authenticate("admin", "vasesilneheslo")) {
+    if(!request->authenticate("admin", "kwUghLrp6hKqO72g")) {
         return request->requestAuthentication();
     }
 
@@ -209,6 +209,57 @@ server.on("/download_bluetooth", HTTP_GET, [](AsyncWebServerRequest *request){
     response->addHeader("Access-Control-Allow-Origin", "*"); 
 
     response->addHeader("Content-Disposition", "attachment; filename=bluetooth_backup.bin");
+
+    request->send(response);
+});
+
+// // //
+// --- ENDPOINT FOR DOWNLOADING THE EXACT UPMAN BACKUP (.BIN) ---
+server.on("/download_upman", HTTP_GET, [](AsyncWebServerRequest *request){
+    if(!request->authenticate("admin", "kwUghLrp6hKqO72g")) {
+        return request->requestAuthentication();
+    }
+
+    const esp_partition_t* partition = esp_partition_find_first(
+        ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_FACTORY, "factory"
+    );
+
+    if (partition == NULL) {
+        request->send(404, "text/plain", "Partition factory not found!");
+        return;
+    }
+
+    uint32_t exactSize = partition->size; // Fallback to full partition size
+    if (LittleFS.exists("/binaries.json")) {
+        File file = LittleFS.open("/binaries.json", "r");
+        if (file) {
+            JsonDocument sizeDoc;
+            if (deserializeJson(sizeDoc, file) == DeserializationError::Ok) {
+                uint32_t savedSize = sizeDoc["upman"]["size"] | 0;
+                if (savedSize > 0 && savedSize <= partition->size) {
+                    exactSize = savedSize;
+                }
+            }
+            file.close();
+        }
+    }
+
+    AsyncWebServerResponse *response = request->beginResponse(
+        "application/octet-stream", exactSize,
+        [partition, exactSize](uint8_t *buffer, size_t maxLen, size_t index) -> size_t {
+            size_t toRead = maxLen;
+            if (index + toRead > exactSize) {
+                toRead = exactSize - index;
+            }
+            if (toRead > 0) {
+                esp_partition_read(partition, index, buffer, toRead);
+            }
+            return toRead;
+        }
+    );
+    response->addHeader("Access-Control-Allow-Origin", "*"); 
+
+    response->addHeader("Content-Disposition", "attachment; filename=upman_backup.bin");
 
     request->send(response);
 });

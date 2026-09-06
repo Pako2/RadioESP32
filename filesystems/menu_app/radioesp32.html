@@ -1539,12 +1539,17 @@ It is recommended to press the button several times and check whether the code d
               <td id="radio-github" class="text-center"><span class="text-muted">Loading...</span></td>
               <td>
                 <div class="row">
-                  <div class="col-xs-6" style="padding-right: 5px;">
+                  <div class="col-xs-4">
+                    <button id="btn-download-radio" class="btn btn-success btn-sm btn-block" onclick="downloadupdate(0);" disabled>
+                      <span class="glyphicon glyphicon-open"></span> Download
+                    </button>
+                  </div>
+                  <div class="col-xs-4" style="padding-left: 5px; padding-right: 5px;">
                     <button id="btn-update-radio" class="btn btn-success btn-sm btn-block" disabled>
                       <span class="glyphicon glyphicon-open"></span> Update
                     </button>
                   </div>
-                  <div class="col-xs-6" style="padding-left: 5px;">
+                  <div class="col-xs-4">
                     <button id="btn-backup-radio" class="btn btn-default btn-sm btn-block">
                       <span class="glyphicon glyphicon-save"></span> Backup
                     </button>
@@ -1559,12 +1564,17 @@ It is recommended to press the button several times and check whether the code d
               <td id="bt-github" class="text-center"><span class="text-muted">Loading...</span></td>
               <td>
                 <div class="row">
-                  <div class="col-xs-6" style="padding-right: 5px;">
+                  <div class="col-xs-4">
+                    <button id="btn-download-bt" class="btn btn-success btn-sm btn-block" onclick="downloadupdate(1);" disabled>
+                      <span class="glyphicon glyphicon-open"></span> Download
+                    </button>
+                  </div>
+                  <div class="col-xs-4" style="padding-left: 5px; padding-right: 5px;">
                     <button id="btn-update-bt" class="btn btn-success btn-sm btn-block" disabled>
                       <span class="glyphicon glyphicon-open"></span> Update
                     </button>
                   </div>
-                  <div class="col-xs-6" style="padding-left: 5px;">
+                  <div class="col-xs-4">
                     <button id="btn-backup-bt" class="btn btn-default btn-sm btn-block">
                       <span class="glyphicon glyphicon-save"></span> Backup
                     </button>
@@ -1576,18 +1586,32 @@ It is recommended to press the button several times and check whether the code d
               <td><strong>Update Manager</strong></td>
               <td id="upman-current" class="text-center">v0.0.0</td>
               <td id="upman-github" class="text-center"><span class="text-muted">Loading...</span></td>
-              <td class="text-center">
-                <span class="text-muted">OTA updates disabled for core system safety.</span>
+              <td>
+                <div class="row">
+                  <div class="col-xs-4">
+                    <button id="btn-download-um" class="btn btn-success btn-sm btn-block" onclick="downloadupdate(2);" disabled>
+                      <span class="glyphicon glyphicon-open"></span> Download
+                    </button>
+                  </div>
+                  <div class="col-xs-4" style="padding-left: 5px; padding-right: 5px;">
+                  </div>
+                  <div class="col-xs-4">
+                    <button id="btn-backup-um" class="btn btn-default btn-sm btn-block">
+                      <span class="glyphicon glyphicon-save"></span> Backup
+                    </button>
+                  </div>
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
+      <span style="color: red;">Note: The "Update" buttons can only work if a "CORS" add-on is installed in the browser !</span>
       </div>
 
 
-<div class="panel panel-default" style="margin-top: 8px; border-color: #d9534f;">
+<div class="panel panel-default" style="margin-top: 32px; border-color: #d9534f;">
     <div class="panel-heading" style="background-color: #d9534f; color: white; font-weight: bold;">
-        <i class="glyphicon glyphicon-folder-open"></i> Manual Firmware Upload / Downgrade
+        <i class="glyphicon glyphicon-folder-open"></i> Firmware Upload
     </div>
     <div class="panel-body">
         <p class="text-muted">Select a previously downloaded firmware (.bin file) from your computer to flash it manually.</p>

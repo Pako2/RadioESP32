@@ -18,6 +18,7 @@ var gotInitialData = false;
 var wsConnectionPresent = false;
 var running = null;
 var radioesp32;
+var urls = ["","",""];
 
 
 function bsModal(message, title, isConfirm) {
@@ -173,7 +174,7 @@ $("#flash-progress-text").text("Reading local file from disk...");
         var cleanUrl = window.location.protocol + "//" + window.location.host + endpointUrl;
 
         var USERNAME = "admin";
-        var PASSWORD = "vasesilneheslo";
+        var PASSWORD = "kwUghLrp6hKqO72g";
 
         var headers = new Headers();
         headers.append("Authorization", "Basic " + btoa(USERNAME + ":" + PASSWORD));
@@ -241,7 +242,7 @@ function listupdmanager(obj)
 var repoUrl = "/Pako2/RadioESP32"; 
 // Base URL for download latest files from GitHub: 
 var downloadBaseUrl = "https://github.com" + repoUrl + "/releases/latest/download/"; // for live operation 
-//var downloadBaseUrl = "http://localhost" + "/releases/latest/download/";               // for testing purposes only! //
+var jsonUrl = "https://raw.githubusercontent.com"+repoUrl+"/refs/heads/main/bin/latest.json";
 
     // GLOBAL VARIABLES WITHIN THIS FUNCTION
     var radioBinFile = "";
@@ -252,49 +253,56 @@ var downloadBaseUrl = "https://github.com" + repoUrl + "/releases/latest/downloa
     var gitUm = "0.0.0";
 
     // 2. Download info-file latest.json
-    $.getJSON(downloadBaseUrl + "latest.json", function(data) {
-      //console.log("latest.json = ",data);
+    $.getJSON(jsonUrl, function(data)
+    {
+        radioBinFile = data.radio_file;
+        btBinFile = data.btls_file; 
+        umBinFile = data.upman_file; 
+        urls[0] = downloadBaseUrl + radioBinFile;
+        urls[1] = downloadBaseUrl + btBinFile;
+        urls[2] = downloadBaseUrl + umBinFile;
+
         // --- Radio processing ---
         var currentRadio = $("#radio-current").text().replace('v', '').trim();
         gitRadio = data.radio_version.replace('v', '').trim();
         targetedVersion = gitRadio;
-        radioBinFile = data.radio_file; 
 
         $("#radio-github").html('<span class="label label-info">v' + gitRadio + '</span>');
         
         if (isNewerVersion(currentRadio, gitRadio))
         {
             $("#btn-update-radio").prop("disabled", false);
+            $("#btn-download-radio").prop("disabled", false);
             $("#radio-github").find('.label').removeClass('label-info').addClass('label-success');
         } else
         {
-            $("#radio-github").find('.label').removeClass('label-info').addClass('label-default'); // oprava labelu
+            $("#radio-github").find('.label').removeClass('label-info').addClass('label-default');
         }
 
         // --- Bluetooth processing ---
         var currentBt = $("#bt-current").text().replace('v', '').trim();
         gitBt = data.btls_version.replace('v', '').trim();
         targetedVesion = gitBt;
-        btBinFile = data.btls_file; 
 
         $("#bt-github").html('<span class="label label-info">v' + gitBt + '</span>');
 
         if (isNewerVersion(currentBt, gitBt)) {
-            console.log("isNewerVersion(currentBt, gitBt) is TRUE");
             $("#btn-update-bt").prop("disabled", false);
+            $("#btn-download-bt").prop("disabled", false);
             $("#bt-github").find('.label').removeClass('label-info').addClass('label-success');
         } else {
             $("#bt-github").find('.label').removeClass('label-info').addClass('label-default');
         }
+
         // --- Upman processing ---
         var currentUm = $("#bt-current").text().replace('v', '').trim();
         gitUm = data.upman_version.replace('v', '').trim();
-        umBinFile = data.upman_file; 
 
         $("#upman-github").html('<span class="label label-info">v' + gitUm + '</span>');
 
        if (isNewerVersion(currentUm, gitUm))
        {
+            $("#btn-download-um").prop("disabled", false);
             $("#upman-github").find('.label').removeClass('label-info').addClass('label-success');
         } else {
             $("#upman-github").find('.label').removeClass('label-info').addClass('label-default');
@@ -338,6 +346,12 @@ var downloadBaseUrl = "https://github.com" + repoUrl + "/releases/latest/downloa
         e.preventDefault();
         var currentVer = $("#bt-current").text().trim();
         downloadBackupWithProgress("/download_bluetooth", "bluetooth_" + currentVer + ".bin");
+    });
+
+    $("#btn-backup-um").click(function(e) {
+        e.preventDefault();
+        var currentVer = $("#upman-current").text().trim();
+        downloadBackupWithProgress("/download_upman", "upman_" + currentVer + ".bin");
     });
 
 $("#manual-file-input").change(function() {
@@ -488,7 +502,6 @@ function startOtaUpdate(binFileName, appTarget) {
     var repoUrl = "/Pako2/RadioESP32"; 
     // Base URL for download latest files from GitHub: 
     var downloadBaseUrl = "https://github.com" + repoUrl + "/releases/latest/download/"; // for live operation 
-    //var downloadBaseUrl = "http://localhost" + "/releases/latest/download/";               // for testing purposes only! //
     var fullBinUrl = downloadBaseUrl + binFileName;
     var secureUrl = fullBinUrl + "?cb=" + new Date().getTime();
     
@@ -718,7 +731,9 @@ async function listStats() {
 	document.getElementById("mask").innerHTML = ajaxobj.netmask;
 	document.getElementById("dns").innerHTML = ajaxobj.dns;
 	document.getElementById("mac").innerHTML = ajaxobj.mac;
-	document.getElementById("sver").innerText = version;
+    version = ajaxobj.version;
+	$("#mainver").text(version);
+	$("#sver").text(version);
 	if (ajaxobj.hasOwnProperty("battery"))
 	{
 	$("#batprogress").css('display','table-row');
@@ -1069,13 +1084,14 @@ websock.onopen = function(evt) {
 	};
 }
 
-function downloadupdate()
+function downloadupdate(app)
 {
+  var updurl = urls[app];
   if (updurl)
   {
   fnix = updurl.lastIndexOf("/") + 1,
   filename = updurl.substr(fnix);
-  $('#update').modal('hide');
+  //$('#update').modal('hide');
   var link = document.createElement("a");
   link.download = filename;
   link.target = "_blank";

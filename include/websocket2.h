@@ -267,6 +267,14 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
   {
     shouldReboot = true;
   }
+
+#if defined(AUTOSHUTDOWN)
+  else if (strcmp(command, "shutdown") == 0)
+  {
+    pwoff_req = true;
+  }
+#endif
+
   else if (strcmp(command, "getconf") == 0)
   {
     File configFile = LittleFS.open("/config.json", "r");
