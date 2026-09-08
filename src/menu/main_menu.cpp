@@ -333,7 +333,7 @@ void note(struct timeval *tv)
 
 void setup()
 {
-  esp_ota_mark_app_valid_cancel_rollback();
+  //esp_ota_mark_app_valid_cancel_rollback(); //This is completely unnecessary in the case of the arduino framework with a precompiled bootloader !
 
   vTaskDelay(100 / portTICK_PERIOD_MS); // delay before PSRAM use
   //  maintask = xTaskGetCurrentTaskHandle(); // My taskhandle

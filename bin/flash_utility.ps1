@@ -1,7 +1,7 @@
 # Resetování konzole do výchozího stavu systému (černé pozadí)
 Clear-Host
 
-$VER = "2.0.0"
+$VER = "2.0.2"
 
 # Pomocná funkce pro výpis textu
 function Write-Menu {

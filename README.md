@@ -102,7 +102,7 @@ Due to strict modern browser security standards (CORS policies) implemented by G
 To complete an application upgrade, you have two equally reliable options:
 
 1. **Manual Offline Upload (Recommended & Safest):** 
-   Simply click the green **Download** button next to the target application to save the latest `.bin` firmware file directly to your PC. Then, navigate to the **Firmware Upload** panel below, select the correct **Target Application**, click the **Browse...** button to select the downloaded binary from your hard drive, and click **Flash Selected File**. (CORS policies do not apply to local disk uploads, so your WebSocket progress bar will function perfectly).
+   Simply click the green **Download** button next to the target application to save the latest `.bin` firmware file directly to your PC. Then, navigate to the **Firmware Upload** panel below, select the correct **Target Application**, click the **Browse...** button to select the downloaded binary from your hard drive, and click **Flash Selected File**.
 
 2. **Direct Web Upgrade (Advanced):**
    If you prefer to upgrade with a single click directly from the web interface using the automated table, you must temporarily enable a CORS-bypass extension in your browser (such as *"Allow CORS: Access-Control-Allow-Origin"* for Chrome/Firefox) before opening the Update Manager dashboard.

@@ -106,6 +106,7 @@ uint32_t pastpos = 0xFFFFFFFF;
 uint8_t poscounter = 0;
 #endif
 bool sdp_icons_req = false;
+//uint32_t rollbacktimer = 0;
 
 const char SPACES[33] = "                                ";
 char *shorttrname;
@@ -698,26 +699,27 @@ void updateVolume(int8_t volstep)
 #if defined(SDCARD)
 void setTrack(int16_t trck)
 {
+  int16_t tmpix;
   clearLines();
   if (trck < 0) // random
   {
-    SD_curindex = (int)random(SD_filecount); // Yes, pick random track
+    tmpix = (int)random(SD_filecount); // Yes, pick random track
   }
   else
   {
     random_ = false;
-    SD_curindex = trck;
+    tmpix = trck;
   }
-  SD_ix = SD_curindex;
+  SD_ix = tmpix;
   setMutepin(0, true);
-  getSDFileName(SD_curindex);
+  getSDFileName(tmpix);
   setSDFileName(mp3spec);
   char *shortname = getShortSDFileName();
+  SD_curindex = tmpix;
   cpycharar(artist, shortname, strlen(shortname));
   updateartist = true;
   sendSDtrack(SD_curindex, shortname);
 }
-
 void countTrack(int8_t step)
 {
   if (step != 0)
@@ -1335,6 +1337,10 @@ void audioTask(void *parameter)
       {
         SD_oldindex = SD_curindex;
       }
+      else
+      {
+        ESP_LOGE(TAG, "Unable to open \"%s\" file !", SD_lastmp3spec);
+      }
       sdp_icons_req = true;
     }
 #endif
@@ -1463,7 +1469,8 @@ void note(struct timeval *tv)
 
 void setup()
 {
-  esp_ota_mark_app_valid_cancel_rollback();
+//  esp_ota_mark_app_valid_cancel_rollback();
+//  rollbacktimer = millis();
 
   vTaskDelay(100 / portTICK_PERIOD_MS);   // delay before PSRAM use
   maintask = xTaskGetCurrentTaskHandle(); // My taskhandle
@@ -1947,6 +1954,17 @@ void stopAudioForUpdate()
 
 void loop()
 {
+  /*
+  if (rollbacktimer != 0)
+  {
+    if ((millis()-rollbacktimer) >= 60000)
+    {
+      esp_ota_mark_app_valid_cancel_rollback();
+      ESP_LOGW(TAG, "Application state marked with the \"ESP_OTA_IMG_VALID\" !");
+      rollbacktimer = 0;
+    }
+  }
+  */
   char timetxt2[9];
   char shorttimetxt[6];
   char sub[3];

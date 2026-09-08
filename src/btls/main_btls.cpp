@@ -14,6 +14,7 @@ Config *config;
 // Global variables
 bool pauseflag = false;
 int volume = 0;
+//uint32_t rollbacktimer = 0;
 
 #include "display1.h"
 #define A2DP_I2S_AUDIOTOOLS 0 // Suppress warning "AudioTools library is not included first or installed"
@@ -414,7 +415,8 @@ void displayTask(void *pvParameters)
 
 void setup()
 {
-  esp_ota_mark_app_valid_cancel_rollback();
+//  esp_ota_mark_app_valid_cancel_rollback();
+//  rollbacktimer = millis();
 
   vTaskDelay(200 / portTICK_PERIOD_MS); // delay before PSRAM use
   // DEBUG !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -619,6 +621,17 @@ void getDeviceUptimeString(char *uptimestr)
 
 void loop()
 {
+  /*
+  if (rollbacktimer != 0)
+  {
+    if ((millis()-rollbacktimer) >= 60000)
+    {
+      esp_ota_mark_app_valid_cancel_rollback();
+      ESP_LOGW(TAG, "Application state marked with the \"ESP_OTA_IMG_VALID\" !");
+      rollbacktimer = 0;
+    }
+  }
+  */
   enc_loop(); // Check rotary encoder functions
   if (IrReceiver.decode())
   {
