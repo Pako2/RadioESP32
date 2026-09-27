@@ -81,24 +81,25 @@ enum IRcmd
   IR_8,
   IR_9,
   IR_MUTE,
-  IR_VOLP,  // volume+
-  IR_VOLM,  // volume-
-  IR_CHP,   // channel+ (station+)
-  IR_CHM,   // channel- (station-)
-  IR_PP,    // pause/play
-  IR_STOP,  // stop
-  IR_RNDM,  // random
-  IR_RPT,   // repeat
-  IR_RADIO, // radio
-  IR_SD,    // SD player
-  IR_OK,    // OK
-  IR_EX,    // exit
-  IR_BS,    // backspace
-  IR_FORW,  // next
-  IR_BACKW, // previous
+  IR_VOLP,   // volume+
+  IR_VOLM,   // volume-
+  IR_CHP,    // channel+ (station+)
+  IR_CHM,    // channel- (station-)
+  IR_PP,     // pause/play
+  IR_STOP,   // stop
+  IR_RNDM,   // random
+  IR_RPT,    // repeat
+  IR_RADIO,  // radio
+  IR_SD,     // SD player
+  IR_OK,     // OK
+  IR_EX,     // exit
+  IR_BS,     // backspace
+  IR_FORW,   // next
+  IR_BACKW,  // previous
+  IR_TOGGLE, // toggle applications
 #if defined(AUTOSHUTDOWN)
-  IR_ISD, // immediate shutdown
-  IR_SSD  // scheduled shutdown
+  IR_ISD,    // immediate shutdown
+  IR_SSD     // scheduled shutdown
 #endif
 };
 

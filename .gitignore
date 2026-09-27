@@ -15,10 +15,13 @@ filesystems/menu_app/config.json
 filesystems/menu_app/binaries.json
 filesystems/radio_app/config.json
 filesystems/radio_app/binaries.json
-include/webh/*
-!include/webh/README
+include/webh/radio_app/*
+include/webh/menu_app/*
+!include/webh/radio_app/README
+!include/webh/menu_app/README
 scripts/__pycache__/*
 scripts/htmlmin/__pycache__/*
 scripts/htmlmin/python3html/__pycache__/*
 partition_table_from_flash.bin
 RadioESP32.code-workspace
+logs

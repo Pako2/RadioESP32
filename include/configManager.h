@@ -178,16 +178,14 @@ bool loadConfiguration()
 	RESERVEDGPIOS[resix++] = 14;
 	RESERVEDGPIOS[resix++] = 15;
 #endif
-#if defined(BOARD_HAS_PSRAM)
-	RESERVEDGPIOS[resix++] = 16;
-	RESERVEDGPIOS[resix++] = 17;
-#endif
-	RESERVEDGPIOS[resix++] = 18;
-	RESERVEDGPIOS[resix++] = 21;
-	RESERVEDGPIOS[resix++] = 22;
-	RESERVEDGPIOS[resix++] = 23;
+	RESERVEDGPIOS[resix++] = 16; //PSRAM !
+	RESERVEDGPIOS[resix++] = 17; //PSRAM !
+	RESERVEDGPIOS[resix++] = TFT_SCLK;
+	RESERVEDGPIOS[resix++] = TFT_CS;
+	RESERVEDGPIOS[resix++] = TFT_DC;
+	RESERVEDGPIOS[resix++] = TFT_MOSI;
 #if defined(BATTERY)
-	RESERVEDGPIOS[resix++] = 36;
+	RESERVEDGPIOS[resix++] = BATTERY;
 #endif
 #endif
 	// ToDo for other display versions ?

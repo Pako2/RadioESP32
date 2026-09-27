@@ -409,7 +409,7 @@ var jsonUrl = "https://raw.githubusercontent.com"+repoUrl+"/refs/heads/main/bin/
             $("#bt-github").find('.label').removeClass('label-info').addClass('label-default');
         }
         // --- Upman processing ---
-        var currentUm = $("#bt-current").text().replace('v', '').trim();
+        var currentUm = $("#upman-current").text().replace('v', '').trim();
         gitUm = data.upman_version.replace('v', '').trim();
         umBinFile = data.upman_file; 
 
@@ -423,7 +423,7 @@ var jsonUrl = "https://raw.githubusercontent.com"+repoUrl+"/refs/heads/main/bin/
         }
 
     }).fail(function() {
-        $("#radio-github, #bt-github").html('<span class="label label-danger">Connection error</span>');
+        $("#radio-github, #bt-github, #upman-github").html('<span class="label label-danger">Connection error</span>');
     });
 }
 

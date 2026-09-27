@@ -14,6 +14,7 @@ Config *config;
 // Global variables
 bool pauseflag = false;
 int volume = 0;
+bool toggle_req = false;
 //uint32_t rollbacktimer = 0;
 
 #include "display1.h"
@@ -332,7 +333,7 @@ void enc_loop()
         break;
       case 2:
         jump2radioflag = true;
-        bootToPartition(ESP_PARTITION_SUBTYPE_APP_OTA_0, "Radio (app1)");
+        bootToPartition(ESP_PARTITION_SUBTYPE_APP_OTA_0, "Radio (app0)");
         break;
       case 3:
         dispmode = DSP_OTHER;
@@ -574,6 +575,9 @@ void irloop()
       case IR_ISD:
         pwoff_req = true;
         break;
+      case IR_TOGGLE:
+        toggle_req = true;
+        break;
       case IR_RADIO:
         bootToPartition(ESP_PARTITION_SUBTYPE_APP_OTA_0, "RADIO (app0)");
         break;
@@ -619,6 +623,17 @@ void getDeviceUptimeString(char *uptimestr)
   sprintf(uptimestr, "%ld weeks, %ld days, %ld hours, %ld mins, %ld secs", uptime.weeks, uptime.days, uptime.hours, uptime.mins, uptime.secs);
 }
 
+void jumptoradio()
+{
+  jump2radioflag = true;
+  tft.fillScreen(TFT_BLACK);
+  u8g2.setFont(u8g2_font_t0_17_me);
+  drawUTF8(0, HGT - 2 * CELLHGT - 4 + LINEOFFSET, "Jump to");
+  drawUTF8(0, HGT - CELLHGT - 2 + LINEOFFSET, "Radio");
+  ESP_LOGW(TAG, "Jump to radio !"); //
+  bootToPartition(ESP_PARTITION_SUBTYPE_APP_OTA_0, "Radio (app0)");
+}
+
 void loop()
 {
   /*
@@ -636,6 +651,11 @@ void loop()
   if (IrReceiver.decode())
   {
     irloop();
+  }
+  if (toggle_req)
+  {
+    jumptoradio();
+    toggle_req = false;
   }
   if (proc5s_req)
   {

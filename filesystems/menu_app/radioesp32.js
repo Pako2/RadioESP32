@@ -295,7 +295,7 @@ var jsonUrl = "https://raw.githubusercontent.com"+repoUrl+"/refs/heads/main/bin/
         }
 
         // --- Upman processing ---
-        var currentUm = $("#bt-current").text().replace('v', '').trim();
+        var currentUm = $("#upman-current").text().replace('v', '').trim();
         gitUm = data.upman_version.replace('v', '').trim();
 
         $("#upman-github").html('<span class="label label-info">v' + gitUm + '</span>');
@@ -309,7 +309,7 @@ var jsonUrl = "https://raw.githubusercontent.com"+repoUrl+"/refs/heads/main/bin/
         }
 
     }).fail(function() {
-        $("#radio-github, #bt-github").html('<span class="label label-danger">Connection error</span>');
+        $("#radio-github, #bt-github, #upman-github").html('<span class="label label-danger">Connection error</span>');
     });
 
     // --- 3. Action buttons

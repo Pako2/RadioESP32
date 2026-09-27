@@ -386,43 +386,45 @@ void onWsEvent(AsyncWebSocket *server_, AsyncWebSocketClient *client, AwsEventTy
     }
 
     // ============================================================================
-    // SECTION B: HANDLE TEXT MESSAGES (Your existing logic + OTA trigger commands)
+    // SECTION B: HANDLE TEXT MESSAGES (websocket commands)
     // ============================================================================
     else if (info->opcode == WS_TEXT)
     {
-      uint64_t index = info->index;
-      uint64_t infolen = info->len;
-
-      if (info->final && info->index == 0 && infolen == len)
+      // STEP 1: Capturing the start of the message and allocation
+      if (info->index == 0)
       {
-        // The whole message is in a single frame and we got all of its data
-        client->_tempObject = ps_malloc(len);
-        if (client->_tempObject != NULL)
+        if (info->num == 0 && client->_tempObject == NULL)
         {
-          memcpy((uint8_t *)(client->_tempObject), data, len);
+          client->_tempObject = ps_malloc(info->len);
         }
-        procMsg(client, infolen);
       }
-      else
+
+      // STEP 2: Strictly secured write to the buffer
+      if (client->_tempObject != NULL)
       {
-        // Message is comprised of multiple frames or the frame is split into multiple packets
-        if (index == 0)
+        // Overflow protection: We allow the write ONLY if it fits within the allocated size (info->len).
+        if (info->index + len <= info->len)
         {
-          if (info->num == 0 && client->_tempObject == NULL)
-          {
-            client->_tempObject = ps_malloc(infolen);
-          }
+          memcpy((uint8_t *)(client->_tempObject) + info->index, data, len);
         }
-        if (client->_tempObject != NULL)
+        else
         {
-          memcpy((uint8_t *)(client->_tempObject) + index, data, len);
+          // If the library sends an out-of-range index, we ignore the write operation and prevent a crash.
+          ESP_LOGE(WSTAG, "Buffer overflow attempt! Index: %u, Len: %u, Max: %u", info->index, len, info->len);
         }
-        if ((index + len) == infolen)
+      }
+
+      // STEP 3: Reaching the end of the message
+      if (client->_tempObject != NULL && (info->index + len) == info->len)
+      {
+        if (info->final)
         {
-          if (info->final)
-          {
-            procMsg(client, infolen);
-          }
+          procMsg(client, info->len);
+
+          // CRITICAL: We must reset the pointer immediately after processing!
+          // This ensures that any subsequent or duplicate network packet within this frame
+          // will not trigger the conditions above and overwrite the memory again.
+          client->_tempObject = NULL;
         }
       }
     }

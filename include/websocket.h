@@ -1,6 +1,5 @@
 const char *WSTAG = "websocket"; // For debug lines
 
-
 void procMsg(AsyncWebSocketClient *client, size_t sz)
 {
   JsonDocument root;
@@ -11,8 +10,6 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
   if (error)
   {
     ESP_LOGW(WSTAG, "Couldn't parse WebSocket message");
-    //free(client->_tempObject);
-    //client->_tempObject = NULL;
     return;
   }
   const char *command = root["command"];
@@ -27,13 +24,12 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
     f = LittleFS.open("/config.json", FILE_WRITE);
     if (f)
     {
-      //serializeJsonPretty(root, Serial);
+      // serializeJsonPretty(root, Serial);
       vTaskDelay(5 / portTICK_PERIOD_MS);
       serializeJsonPretty(root, f);
       f.close();
       shouldReboot = true;
     }
-
   }
   else if (strcmp(command, "binaries") == 0)
   {
@@ -51,7 +47,6 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
   {
     sendStatus(client);
   }
-
   else if (strcmp(command, "pmode") == 0)
   {
     if (STAmode)
@@ -72,8 +67,6 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
       sendStatus(client);
     }
   }
-
-
   else if (strcmp(command, "radio") == 0)
   {
     if (pmode != PM_RADIO)
@@ -89,7 +82,6 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
     }
     sendRadio();
   }
-
   else if (strcmp(command, "restart") == 0)
   {
     shouldReboot = true;
@@ -98,13 +90,11 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
   {
     formatreq = true;
   }
-
   else if (strcmp(command, "test") == 0)
   {
     const char *url = root["url"];
     testUrl(url);
   }
-
 #if defined(BATTERY)
   else if (strcmp(command, "getadcbat") == 0)
   {
@@ -112,7 +102,6 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
     sendadcbat(val);
   }
 #endif
-
   else if (strcmp(command, "volume") == 0)
   {
     reqvol = root["volume"];
@@ -120,14 +109,12 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
     changeDispMode(DSP_RADIO);
     volumebar(reqvol);
   }
-
 #if defined(AUTOSHUTDOWN)
   else if (strcmp(command, "shutdown") == 0)
   {
     ESP_LOGW(WSTAG, "Shutdown command");
     pwoff_req = true;
   }
-
   else if (strcmp(command, "schedpwoff") == 0)
   {
     uint8_t val = root["val"];
@@ -151,7 +138,6 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
     }
   }
 #endif
-
   else if (strcmp(command, "treble") == 0)
   {
     int8_t treble = root["treble"];
@@ -163,7 +149,6 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
     muteflag = root["mute"];
     mute(0);
   }
-
   else if (strcmp(command, "scan") == 0)
   {
     wifi_mode_t wm = WiFi.getMode();
@@ -199,7 +184,6 @@ void procMsg(AsyncWebSocketClient *client, size_t sz)
       configFile.close();
     }
   }
-
   else if (strcmp(command, "steppreset") == 0)
   {
     changeDispMode(DSP_RADIO);
@@ -303,53 +287,43 @@ void onWsEvent(AsyncWebSocket *server_, AsyncWebSocketClient *client, AwsEventTy
   else if (type == WS_EVT_DATA)
   {
     AwsFrameInfo *info = (AwsFrameInfo *)arg;
-    
-// For the entire message (even if it consists of multiple parts) we need to know the global position:
-// info->index is the position in the current frame, info->num is the frame number.
-// The library provides an absolute index within the entire message in info->index,
-// if we read the message sequentially.
-    
-    if (info->final && info->index == 0 && info->len == len)
+
+    // STEP 1: Capturing the start of the message and allocation
+    if (info->index == 0)
     {
-      // the whole message is in a single frame and we got all of it's data
-      client->_tempObject = ps_malloc(len);
-      if (client->_tempObject != NULL)
+      if (info->num == 0 && client->_tempObject == NULL)
       {
-        memcpy((uint8_t *)(client->_tempObject), data, len);
-        procMsg(client, len);
+        client->_tempObject = ps_malloc(info->len);
       }
     }
-    else
-    {
-      // message is comprised of multiple frames or the frame is split into multiple packets
-      if (info->index == 0)
-      {
-        // At the very beginning of the transmission (first packet of the first frame)
-        // we allocate memory for the ENTIRE message (info->len)
 
-        if (info->num == 0 && client->_tempObject == NULL)
-        //if (client->_tempObject == NULL)
-        {
-          client->_tempObject = ps_malloc(info->len);
-        }
-      }
-      
-      // Secure writing to an absolute index within the entire message
-      if (client->_tempObject != NULL)
+    // STEP 2: Strictly secured write to the buffer
+    if (client->_tempObject != NULL)
+    {
+      // Overflow protection: We allow the write ONLY if it fits within the allocated size (info->len).
+      if (info->index + len <= info->len)
       {
-        // info->index for multiframe messages represents the global offset from the start of the message
         memcpy((uint8_t *)(client->_tempObject) + info->index, data, len);
       }
-      
-      // If we are at the end of the whole message ...
-      if ((info->index + len) == info->len)
+      else
       {
-        if (info->final)
-        {
-          procMsg(client, info->len);
-        }
+        // If the library sends an out-of-range index, we ignore the write operation and prevent a crash.
+        ESP_LOGE(WSTAG, "Buffer overflow attempt! Index: %u, Len: %u, Max: %u", info->index, len, info->len);
+      }
+    }
+
+    // STEP 3: Reaching the end of the message
+    if (client->_tempObject != NULL && (info->index + len) == info->len)
+    {
+      if (info->final)
+      {
+        procMsg(client, info->len);
+
+        // CRITICAL: We must reset the pointer immediately after processing!
+        // This ensures that any subsequent or duplicate network packet within this frame
+        // will not trigger the conditions above and overwrite the memory again.
+        client->_tempObject = NULL;
       }
     }
   }
 }
-

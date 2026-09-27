@@ -106,6 +106,7 @@ uint32_t pastpos = 0xFFFFFFFF;
 uint8_t poscounter = 0;
 #endif
 bool sdp_icons_req = false;
+bool toggle_req = false;
 //uint32_t rollbacktimer = 0;
 
 const char SPACES[33] = "                                ";
@@ -120,9 +121,9 @@ struct WLAN *wlans;
 struct PRESET *presets;
 
 #if defined(AUTOSHUTDOWN)
-const uint8_t cmd_table_len = 28;
+const uint8_t cmd_table_len = 29;
 #else
-const uint8_t cmd_table_len = 26;
+const uint8_t cmd_table_len = 27;
 #endif
 uint8_t *RESERVEDGPIOS;
 char *testurl;
@@ -1778,6 +1779,9 @@ void irloop()
             dgt_count_asd = 0;
             dgt_asd = 0;
             break;
+          case IR_TOGGLE:
+            toggle_req = true;
+            break;
           case IR_OK:
             break;
           case IR_EX:
@@ -1948,7 +1952,7 @@ void stopAudioForUpdate()
     Task0 = NULL;
   }
   audio.stopSong();
-  vTaskDelay(500 / portTICK_PERIOD_MS);
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
   ESP_LOGW(TAG, "Audio completely released. No memory collisions!");
 }
 
@@ -2258,6 +2262,11 @@ void loop()
   {
     sdp_icons();
     sdp_icons_req = false;
+  }
+  if (toggle_req)
+  {
+    jumptobtls();
+    toggle_req = false;
   }
   if (proc1s_req)
   {

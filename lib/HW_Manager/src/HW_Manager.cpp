@@ -73,9 +73,10 @@ const char cmd_22[] PROGMEM = "Exit";
 const char cmd_23[] PROGMEM = "Backspace";
 const char cmd_24[] PROGMEM = "Step Forward";
 const char cmd_25[] PROGMEM = "Step Backward";
+const char cmd_26[] PROGMEM = "Toggle applications";
 #if defined(AUTOSHUTDOWN)
-const char cmd_26[] PROGMEM = "Power OFF";
-const char cmd_27[] PROGMEM = "Sleep";
+const char cmd_27[] PROGMEM = "Power OFF";
+const char cmd_28[] PROGMEM = "Sleep";
 #endif
 
 const char *const cmd_table[] PROGMEM =
@@ -106,9 +107,10 @@ const char *const cmd_table[] PROGMEM =
         cmd_23,
         cmd_24,
         cmd_25,
-#if defined(AUTOSHUTDOWN)
         cmd_26,
-        cmd_27
+#if defined(AUTOSHUTDOWN)
+        cmd_27,
+        cmd_28
 #endif
 };
 
